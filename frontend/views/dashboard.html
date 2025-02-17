@@ -578,6 +578,14 @@
   async function connectWhatsApp() {
     try {
         // Fetch the Meta App ID from the backend
+       const currentHost = window.location.host;
+
+    let redirectUri;
+    if (currentHost.includes("onrender.com")) {
+        redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; // Render deployment
+    } else {
+        redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; // GitHub Pages deployment
+    } 
         const clientId = "1387100758943618";
         const response = await fetch("https://fiew-account.onrender.com/config");
         const config = await response.json();
@@ -590,7 +598,6 @@
         }
 
         // Define the redirect URI and OAuth scope
-        const redirectUri = "https://fiew-account.onrender.com/whatsapp-callback";
         const scope = "whatsapp_business_messaging whatsapp_business_management";
 
         // Construct the authentication URL
