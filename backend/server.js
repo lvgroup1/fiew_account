@@ -144,9 +144,9 @@ app.listen(PORT, () => {
 });
 app.get("/config", (req, res) => {
     if (!process.env.META_APP_ID) {
-        return res.status(500).json({ error: "META_APP_ID is not set in the environment variables." });
+        return res.status(500).json({ error: "Meta App ID is missing in environment variables" });
     }
-    res.json({ metaAppId: process.env.META_APP_ID });
+    res.json({ clientId: process.env.META_APP_ID });
 });
 
 app.post("/webhook", (req, res) => {
