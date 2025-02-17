@@ -577,28 +577,48 @@
     });
 async function connectWhatsApp() {
     try {
-        const response = await fetch("https://fiew-account.onrender.com/config");
-        const config = await response.json();
+        console.log("Connect WhatsApp button clicked!");
 
-        if (!config.clientId) {
+        const currentHost = window.location.host;
+        let redirectUri;
+
+        if (currentHost.includes("onrender.com")) {
+            redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; 
+        } else {
+            redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; 
+        }
+
+        console.log("Redirect URI:", redirectUri);
+
+        const clientId = "1387100758943618";  // Replace with actual Meta App ID
+        if (!clientId) {
             console.error("Meta App ID is missing!");
-            alert("Error: Meta App ID is not set on the server.");
+            alert("Error: Meta App ID is not set.");
             return;
         }
 
-        const clientId = config.clientId;
-        const redirectUri = "https://fiew-account.onrender.com/whatsapp-callback";
+        console.log("Fetching config from backend...");
+        const response = await fetch("https://fiew-account.onrender.com/config");
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const config = await response.json();
+        console.log("Config fetched:", config);
+
         const scope = "whatsapp_business_messaging whatsapp_business_management";
-        
         const authUrl = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code`;
 
-        console.log("Redirecting to WhatsApp OAuth:", authUrl);
+        console.log("Redirecting to:", authUrl);
         window.location.href = authUrl;
+
     } catch (error) {
-        console.error("Error fetching Meta App ID:", error);
-        alert("Failed to connect to WhatsApp.");
+        console.error("Error connecting to WhatsApp:", error);
+        alert("Failed to connect to WhatsApp. Check console for details.");
     }
 }
+
 
 
     function saveMessageTemplate() {
