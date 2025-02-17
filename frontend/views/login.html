@@ -33,7 +33,7 @@
         
         if (response.ok) {
           alert("Login successful! Redirecting to dashboard...");
-          window.location.href = "http://localhost:5000/dashboard.html";
+          window.location.href = "https://lvgroup1.github.io/fiew_account/fronted/views/dashboard.html";
         } else {
           const errorData = await response.json();
           alert(`Error: ${errorData.error || "Login failed"}`);
