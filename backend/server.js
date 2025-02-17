@@ -76,7 +76,7 @@ app.get("/whatsapp-callback", async (req, res) => {
             params: {
                 client_id: process.env.META_APP_ID, // Ensure this is set in .env
                 client_secret: process.env.META_APP_SECRET, // Ensure this is set in .env
-                redirect_uri: "http://localhost:5000/whatsapp-callback",
+                redirect_uri: "https://fiew-account.onrender.com/whatsapp-callback",
                 code: code
             }
         });
