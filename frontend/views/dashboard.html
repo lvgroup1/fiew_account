@@ -578,7 +578,7 @@
     async function connectWhatsApp() {
     try {
         // Fetch the Meta App ID from the backend
-        const response = await fetch("https://lvgroup1.github.io/fiew_account/config");
+        const response = await fetch("https://fiew-account.onrender.com/config");
         const config = await response.json();
         const clientId = config.metaAppId;
 
@@ -589,7 +589,7 @@
         }
 
         // Define the redirect URI and OAuth scope
-        const redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback";
+        const redirectUri = "https://fiew-account.onrender.com/whatsapp-callback";
         const scope = "whatsapp_business_messaging whatsapp_business_management";
 
         // Construct the authentication URL
@@ -624,7 +624,7 @@
     const messageTemplate = localStorage.getItem("whatsappMessage") || `Hello ${firstName}, your appointment is completed. Thank you!`;
 
     try {
-        const response = await fetch("https://lvgroup1.github.io/fiew_account/send-whatsapp", {
+        const response = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ phone, message: messageTemplate })
