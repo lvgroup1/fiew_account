@@ -24,13 +24,20 @@ app.use(express.static(path.join(__dirname, "../frontend/views")));
 app.use("/api", userRoutes);
 
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ MongoDB Atlas connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+async function testMongoDBConnection() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("✅ MongoDB connected successfully");
+  } catch (error) {
+    console.error("❌ MongoDB connection failed:", error);
+  }
+}
+
+testMongoDBConnection();
+
 
 // Define Client Schema
 const clientSchema = new mongoose.Schema({
