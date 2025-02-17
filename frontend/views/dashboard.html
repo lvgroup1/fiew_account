@@ -575,28 +575,18 @@
         document.getElementById("user-email").textContent = userEmail;
       }
     });
+    
 async function connectWhatsApp() {
     try {
         console.log("Connect WhatsApp button clicked!");
 
         const currentHost = window.location.host;
-        let redirectUri;
-
-        if (currentHost.includes("onrender.com")) {
-            redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; 
-        } else {
-            redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; 
-        }
+        let redirectUri = currentHost.includes("onrender.com")
+            ? "https://fiew-account.onrender.com/whatsapp-callback"
+            : "https://lvgroup1.github.io/fiew_account/whatsapp-callback";
 
         console.log("Redirect URI:", redirectUri);
-
-        const clientId = "1387100758943618";  // Replace with actual Meta App ID
-        if (!clientId) {
-            console.error("Meta App ID is missing!");
-            alert("Error: Meta App ID is not set.");
-            return;
-        }
-
+        
         console.log("Fetching config from backend...");
         const response = await fetch("https://fiew-account.onrender.com/config");
 
@@ -606,6 +596,13 @@ async function connectWhatsApp() {
 
         const config = await response.json();
         console.log("Config fetched:", config);
+
+        const clientId = config.META_APP_ID;
+        if (!clientId) {
+            console.error("Meta App ID is missing!");
+            alert("Error: Meta App ID is not set.");
+            return;
+        }
 
         const scope = "whatsapp_business_messaging whatsapp_business_management";
         const authUrl = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code`;
@@ -618,7 +615,6 @@ async function connectWhatsApp() {
         alert("Failed to connect to WhatsApp. Check console for details.");
     }
 }
-
 
 
     function saveMessageTemplate() {
