@@ -139,30 +139,41 @@ app.post("/send-whatsapp", async (req, res) => {
     }
 });
 
+// Handle WhatsApp OAuth callback
 router.post("/whatsapp-auth", async (req, res) => {
-    const { code } = req.body;
-
-    if (!code) {
-        return res.status(400).json({ error: "Missing authorization code." });
-    }
-
     try {
-        const response = await axios.post("https://graph.facebook.com/v16.0/oauth/access_token", null, {
-            params: {
-                client_id: process.env.META_APP_ID,
-                client_secret: process.env.META_APP_SECRET,
-                redirect_uri: "https://fiew-account.onrender.com/whatsapp-callback",
-                code: code
+        const { code } = req.body;  // Get the OAuth code from the frontend
+
+        if (!code) {
+            return res.status(400).json({ error: "Missing OAuth code" });
+        }
+
+        // Exchange the code for an access token
+        const tokenResponse = await axios.post(
+            `https://graph.facebook.com/v16.0/oauth/access_token`,
+            null,
+            {
+                params: {
+                    client_id: process.env.META_APP_ID, // Your Meta App ID
+                    client_secret: process.env.META_APP_SECRET, // Your Meta App Secret
+                    redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
+                    code: code,
+                },
             }
-        });
+        );
 
-        const { access_token } = response.data;
-        console.log("Received WhatsApp Access Token:", access_token);
+        const accessToken = tokenResponse.data.access_token;
+        if (!accessToken) {
+            return res.status(400).json({ error: "Failed to get access token" });
+        }
 
-        // Save access token to the database or session for later use
-        res.json({ message: "WhatsApp connected successfully!", access_token });
+        // Store accessToken in database (user-specific)
+        // Here, you would save it in MongoDB or IndexedDB
+
+        res.json({ success: true, message: "WhatsApp connected successfully!" });
+
     } catch (error) {
-        console.error("WhatsApp authentication failed:", error.response ? error.response.data : error.message);
+        console.error("WhatsApp authentication error:", error.response?.data || error.message);
         res.status(500).json({ error: "Failed to authenticate WhatsApp." });
     }
 });
