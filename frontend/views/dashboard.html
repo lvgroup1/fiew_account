@@ -575,12 +575,13 @@
         document.getElementById("user-email").textContent = userEmail;
       }
     });
-    async function connectWhatsApp() {
+  async function connectWhatsApp() {
     try {
         // Fetch the Meta App ID from the backend
+        const clientId = "1387100758943618";
         const response = await fetch("https://fiew-account.onrender.com/config");
         const config = await response.json();
-        const clientId = config.metaAppId;
+        
 
         if (!clientId) {
             console.error("Meta App ID is missing!");
