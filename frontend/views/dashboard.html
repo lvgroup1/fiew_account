@@ -577,42 +577,26 @@
     });
 async function connectWhatsApp() {
     try {
-        const currentHost = window.location.host;
-
-        let redirectUri;
-        if (currentHost.includes("onrender.com")) {
-            redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; // Render deployment
-        } else {
-            redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; // GitHub Pages deployment
-        }
-
-        // Fetch the Meta App ID from the backend
         const response = await fetch("https://fiew-account.onrender.com/config");
-        if (!response.ok) {
-            throw new Error(`Server response error: ${response.status}`);
-        }
         const config = await response.json();
-        
-        const clientId = config.clientId || "1387100758943618"; // Fallback to static ID
 
-        if (!clientId || clientId === "1387100758943618") {
-            console.error("Meta App ID is missing or incorrect!");
+        if (!config.clientId) {
+            console.error("Meta App ID is missing!");
             alert("Error: Meta App ID is not set on the server.");
             return;
         }
 
-        // Define the redirect URI and OAuth scope
+        const clientId = config.clientId;
+        const redirectUri = "https://fiew-account.onrender.com/whatsapp-callback";
         const scope = "whatsapp_business_messaging whatsapp_business_management";
-
-        // Construct the authentication URL
+        
         const authUrl = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code`;
 
         console.log("Redirecting to WhatsApp OAuth:", authUrl);
         window.location.href = authUrl;
-
     } catch (error) {
         console.error("Error fetching Meta App ID:", error);
-        alert("Failed to connect to WhatsApp. Please try again later.");
+        alert("Failed to connect to WhatsApp.");
     }
 }
 
