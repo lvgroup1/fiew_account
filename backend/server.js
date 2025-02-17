@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, "../frontend/views")));
 app.use("/api", userRoutes);
 
 // Add the WhatsApp Authentication Routes
-app.use("/api", whatsappRoutes);
+app.use('/api/whatsapp', whatsappRoutes); 
 
 // Default route
 app.get("/", (req, res) => {
