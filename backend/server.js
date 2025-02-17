@@ -142,12 +142,15 @@ app.post("/send-whatsapp", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+// API route to return the Meta App ID
 app.get("/config", (req, res) => {
-    if (!process.env.META_APP_ID) {
+    const metaAppId = process.env.META_APP_ID;
+    if (!metaAppId) {
         return res.status(500).json({ error: "Meta App ID is missing in environment variables" });
     }
-    res.json({ clientId: process.env.META_APP_ID });
+    res.json({ clientId: metaAppId });
 });
+
 
 app.post("/webhook", (req, res) => {
     console.log("📬 Incoming Webhook Event:", req.body);
