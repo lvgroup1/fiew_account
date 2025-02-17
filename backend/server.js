@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const axios = require("axios");
 const router = express.Router();
-const whatsappRoutes = require("./whatsappRoutes");
+const whatsappRoutes = require("./routes/whatsappRoutes");
 
 const express = require("express");
 const mongoose = require("mongoose");
