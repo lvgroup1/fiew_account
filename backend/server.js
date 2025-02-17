@@ -11,7 +11,7 @@ const cors = require("cors");
 const path = require("path");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors()); // Allow frontend requests
 
@@ -26,6 +26,11 @@ app.use(express.static(path.join(__dirname, "../frontend/views")));
 app.use("/api", userRoutes);
 // Add the WhatsApp Authentication Routes
 app.use("/api", whatsappRoutes);
+
+// ✅ API health check
+app.get("/api/status", (req, res) => {
+    res.json({ status: "ok" });
+});
 
 // Connect to MongoDB
 async function testMongoDBConnection() {
@@ -180,9 +185,9 @@ router.post("/whatsapp-auth", async (req, res) => {
 
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
 // API route to return the Meta App ID
 app.get("/config", (req, res) => {
     const metaAppId = process.env.META_APP_ID;
