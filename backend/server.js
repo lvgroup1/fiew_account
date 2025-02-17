@@ -14,18 +14,24 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors()); // Allow frontend requests
+app.use(express.json());
 
 // Middleware
 app.use(cors({ origin: "https://lvgroup1.github.io" }));  // (Optional) Allow requests from another origin if needed
-app.use(express.json());
 
 // Serve static files from the frontend/views folder
 app.use(express.static(path.join(__dirname, "../frontend/views")));
 
 // API Routes (all endpoints here are prefixed with /api)
 app.use("/api", userRoutes);
+
 // Add the WhatsApp Authentication Routes
 app.use("/api", whatsappRoutes);
+
+// Default route
+app.get("/", (req, res) => {
+    res.send("Server is running...");
+});
 
 // ✅ API health check
 app.get("/api/status", (req, res) => {
