@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Dashboard</title>
+  <style>
+    :root {
+      --header-bg: #ffffff;
+      --header-text: #000;
+      --table-header-bg: #fdeac9;
+      --body-bg: #f4f6f8;
+      --border-color: #ccc;
+      --input-bg: #f0f0f0;
+      --highlight-color: orange;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Bodoni MT", Didot, "Didot LT STD", "Book Antiqua", Garamond, "Times New Roman", serif;
+      background: var(--body-bg);
+      color: #333;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--header-bg);
+      padding: 15px 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    .nav-links {
+      display: flex;
+      gap: 50px; /* Increased spacing between items */
+      font-size: 18px;
+      font-weight: bold;
+      justify-content: center;
+      flex-grow: 1;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--header-text);
+      cursor: pointer;
+    }
+    .nav-links a.active {
+      color: var(--highlight-color);
+    }
+    .user-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      position: absolute;
+      right: 20px;
+    }
+    .logout {
+      color: red;
+      cursor: pointer;
+    }
+    .page {
+      display: none;
+      padding: 20px;
+      margin-top: 90px; /* Adjusted to ensure spacing from menu */
+    }
+    .active-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 110px); /* Adjust height to prevent overlap */
+    }
+    .home-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 110px); /* Ensure it does not overlap with the menu */
+      flex-direction: column;
+    }
+    .home-content {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .home-content img {
+      max-width: 50%; /* Reduce image width */
+      height: auto;
+      margin-top: 20px;
+      border-radius: 8px; /* Optional: Adds rounded corners */
+      object-fit: contain; /* Ensures the image scales correctly inside container */
+    }
+    .welcome-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 600px;
+    }
+    .crm-container {
+      width: calc(100% - 40px); /* 10px margin on both sides */
+      display: flex;
+      margin: 100px 15px 0 15px;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 175px);
+      margin-top: -65px; /* Space from menu */
+      overflow-y: auto;
+      max-height: calc(100vh - 120px);
+    }
+    .content-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      position: relative;
+    }
+    .table-container {
+      width: 100%;
+      padding-top: -6px;
+      border-radius: 4px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid black;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px var(--shadow-color);
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+    th {
+      background: var(--table-header-bg);
+      font-weight: bold;
+    }
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      position: absolute;
+      top: 10px;
+      right: 39px;
+      font-family: "Bodoni MT", Didot, "Didot LT STD", "Book Antiqua", Garamond, "Times New Roman", serif;
+    }
+    .button-container button {
+      padding: 2px 8px;
+      border: 1px solid black;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #fdeac9;
+      font-size: 10px;
+      font-family: "Bodoni MT", Didot, "Didot LT STD", "Book Antiqua", Garamond, "Times New Roman", serif;
+    }
+    .account-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 110px);
+    }
+    .account-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      width: 60%;
+    }
+    .account-menu {
+      width: 30%;
+      padding: 20px;
+      border-right: 2px solid var(--border-color);
+    }
+    .account-menu a {
+      display: block;
+      margin-bottom: 15px;
+      text-decoration: none;
+      color: #000;
+      font-size: 16px;
+    }
+    .account-menu a.active {
+      color: var(--highlight-color);
+      font-weight: bold;
+    }
+    .account-content {
+      width: 70%;
+      padding: 20px;
+    }
+    .input-box {
+      width: 100%;
+      background: var(--input-bg);
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .status-select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+    }
+    .whatsapp-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 80px);
+      background-color: #f4f6f8;
+    }
+    
+    .whatsapp-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    .whatsapp-box h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .whatsapp-box button {
+      background-color: #25d366;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .whatsapp-box button:hover {
+      background-color: #1eb854;
+    }
+    
+    .whatsapp-box p {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="nav-links">
+      <a href="#" onclick="showPage(event, 'home')">Home</a>
+      <a href="#" onclick="showPage(event, 'crm')">CRM</a>
+      <a href="#" onclick="showPage(event, 'whatsapp')">WhatsApp</a>
+    </div>
+    <div class="user-controls">
+      <span onclick="showPage(event, 'account')" style="cursor:pointer; color: var(--highlight-color);">👤</span>
+      <span class="logout" onclick="logout()">Log-out</span>
+    </div>
+  </div>
+  
+  <div id="home" class="page active-page home-container">
+    <div class="home-content">
+      <h2>Welcome, back!</h2>
+      <p>Make your company routine easier with</p>
+      <img src="fiew-logo.png" alt="Home Image">
+    </div>
+  </div>
+  
+  <div id="crm" class="page crm-container">
+    <div class="content-box">
+      <div class="button-container">
+        <button onclick="toggleEditMode()">Edit</button>
+        <button onclick="openAddClientModal()">Add</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>First name, Last name</th>
+              <th>Status</th>
+              <th>E-mail</th>
+              <th>Phone number</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="addClientModal" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+    <h2>Add New Client</h2>
+    <input class="input-box" type="text" id="firstName" placeholder="First Name">
+    <input class="input-box" type="text" id="lastName" placeholder="Last Name">
+    <input class="input-box" type="email" id="email" placeholder="E-mail">
+    <input class="input-box" type="text" id="phone" placeholder="Phone Number">
+    <select class="input-box" id="status">
+        <option value="New">New</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Completed">Completed</option>
+        <option value="Canceled">Canceled</option>
+    </select>
+    <button onclick="saveClient()">Save</button>
+    <button onclick="closeAddClientModal()">Cancel</button>
+  </div>
+  
+  <div id="account" class="page account-container">
+    <div class="account-box">
+      <div class="account-menu">
+        <a href="#" onclick="showAccountSection(event, 'personal')" class="active">Personal information</a>
+        <a href="#" onclick="showAccountSection(event, 'billing')">Billing information</a>
+        <a href="#" onclick="showAccountSection(event, 'subscription')">Subscription</a>
+        <a href="#" onclick="showAccountSection(event, 'invoices')">Invoices</a>
+      </div>
+      <div class="account-content">
+        <div id="personal" class="account-section active-section">
+          <h2>Personal information</h2>
+          <div class="input-box">Phone number:</div>
+          <div class="input-box">E-mail:</div>
+          <div class="input-box">Change password:</div>
+        </div>
+        <div id="billing" class="account-section" style="display:none;">
+          <h2>Billing information</h2>
+          <div> </div>
+        </div>
+        <div id="subscription" class="account-section" style="display:none;">
+          <h2>Subscription</h2>
+          <div> </div>
+        </div>
+        <div id="invoices" class="account-section" style="display:none;">
+          <h2>Invoices</h2>
+          <div > </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="whatsapp" class="page whatsapp-container" style="display: none;">
+    <div class="whatsapp-box">
+      <h2>WhatsApp Business Integration</h2>
+      <button onclick="connectWhatsApp()">Connect WhatsApp Business</button>
+      <p id="whatsapp-status"></p>
+
+      <h3>Customize Your Message</h3>
+      <textarea id="whatsapp-message" class="whatsapp-message" placeholder="Enter your message...">Hello {name}, your request has been completed! 🎉</textarea>
+      <button onclick="saveMessageTemplate()">Save Message</button>
+    </div>
+    </div>
+  </div>
+  
+  <script>
+    let db;
+    let editMode = false;
+    const request = indexedDB.open("crmDatabase", 1);
+
+    request.onupgradeneeded = function(event) {
+        db = event.target.result;
+        const store = db.createObjectStore("clients", { keyPath: "id", autoIncrement: true });
+        store.createIndex("name", "firstName", { unique: false });
+    };
+
+    request.onsuccess = function(event) {
+        db = event.target.result;
+        console.log("IndexedDB connected successfully.");
+        loadClients();
+    };
+
+    request.onerror = function(event) {
+        console.error("IndexedDB error:", event.target.errorCode);
+    };
+
+    function logout() {
+        alert("Logging out...");
+        window.location.href = "http://localhost:5000/login.html";
+    }
+
+    function showPage(event, page) {
+        event.preventDefault();
+        document.querySelectorAll('.page').forEach(p => p.style.display = "none");
+        const targetPage = document.getElementById(page);
+        if (!targetPage) {
+            console.error(`Error: Page '${page}' not found.`);
+            return;
+        }
+        targetPage.style.display = "flex";
+    }
+
+    function openAddClientModal() {
+        console.log("Button clicked - opening modal");
+        document.getElementById('addClientModal').style.display = 'block';
+    }
+
+    function closeAddClientModal() {
+        document.getElementById('addClientModal').style.display = 'none';
+    }
+
+    function toggleEditMode() {
+        editMode = !editMode;
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+            btn.style.display = editMode ? "inline-block" : "none";
+        });
+    }
+
+    function formatPhoneNumber(phone) {
+    phone = phone.trim();
+    
+    if (!phone.startsWith("+")) {
+        const defaultCountryCode = "+371"; // Change this based on your country
+        phone = defaultCountryCode + phone;
+    }
+
+    return phone.replace(/\D/g, ""); // Remove any non-numeric characters
+}
+
+
+    function saveClient() {
+        if (!db) {
+            console.error("Database not initialized yet.");
+            return;
+        }
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        let phone = document.getElementById('phone').value.trim();
+        const status = document.getElementById('status').value;
+
+        phone = formatPhoneNumber(phone);
+
+        if (firstName && lastName && email && phone) {
+            const transaction = db.transaction(["clients"], "readwrite");
+            const store = transaction.objectStore("clients");
+            const client = { firstName, lastName, email, phone, status };
+
+            const request = store.add(client);
+            request.onsuccess = function() {
+                console.log("Client added successfully:", client);
+                addClientToTable(client);
+                closeAddClientModal();
+            };
+
+            request.onerror = function(event) {
+                console.error("Error adding client:", event.target.error);
+            };
+        } else {
+            alert("Please fill in all fields.");
+        }
+    }
+
+    function loadClients() {
+        if (!db) {
+            console.error("Database not initialized yet.");
+            return;
+        }
+
+        const transaction = db.transaction(["clients"], "readonly");
+        const store = transaction.objectStore("clients");
+        const request = store.getAll();
+
+        request.onsuccess = function(event) {
+            console.log("Clients loaded:", request.result);
+            request.result.forEach(client => addClientToTable(client));
+        };
+    }
+
+    function addClientToTable(client) {
+        const table = document.querySelector("#crm table tbody");
+        if (!table) {
+            console.error("Error: Clients table not found.");
+            return;
+        }
+
+        const newRow = table.insertRow();
+        newRow.innerHTML = `<td>${client.firstName} ${client.lastName}</td>
+                            <td>
+                                <select class="status-select" onchange="updateStatus(this, ${client.id})">
+                                    <option value="New">New</option>
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Canceled">Canceled</option>
+                                </select>
+                            </td>
+                            <td>${client.email}</td>
+                            <td>${client.phone}</td>
+                            <td><button class="delete-btn" onclick="deleteClient(${client.id})" style="display:none;">🗑️</button></td>`;
+        
+        newRow.querySelector(".status-select").value = client.status;
+    }
+
+    function updateStatus(selectElement, clientId) {
+        if (!db) {
+            console.error("Database not initialized yet.");
+            return;
+        }
+
+        if (!clientId) {
+            console.error("Error: Client ID is undefined.");
+            return;
+        }
+
+        const selectedStatus = selectElement.value;
+        console.log(`Updating status for client ${clientId} to: ${selectedStatus}`); // ✅ Check if this runs
+        
+        const transaction = db.transaction(["clients"], "readwrite");
+        const store = transaction.objectStore("clients");
+        
+        const getRequest = store.get(clientId);
+        getRequest.onsuccess = function(event) {
+            let client = getRequest.result;
+            if (client) {
+                client.status = selectedStatus;
+                const updateRequest = store.put(client);
+                updateRequest.onsuccess = function() {
+                    console.log("Status updated in IndexedDB");
+
+                // ✅ Call WhatsApp API when status is "Completed"
+                if (selectedStatus === "Completed") {
+                    sendWhatsAppMessage(client.phone, client.firstName, client.lastName);
+                   }
+                };
+            }
+        };
+    }
+
+    function deleteClient(clientId) {
+        if (!db) {
+            console.error("Database not initialized yet.");
+            return;
+        }
+
+        const transaction = db.transaction(["clients"], "readwrite");
+        const store = transaction.objectStore("clients");
+        const deleteRequest = store.delete(clientId);
+
+        deleteRequest.onsuccess = function() {
+            console.log("Client deleted:", clientId);
+            reloadTable();
+        };
+    }
+
+    function reloadTable() {
+        const table = document.querySelector("#crm table tbody");
+        if (table) table.innerHTML = "";
+        loadClients();
+    }
+    function showAccountSection(event, section) {
+      event.preventDefault();
+      document.querySelectorAll('.account-section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(section).style.display = 'block';
+
+      document.querySelectorAll('.account-menu a').forEach(link => link.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const userEmail = localStorage.getItem("userEmail"); // Fetch email from local storage
+      if (userEmail) {
+        document.getElementById("user-email").textContent = userEmail;
+      }
+    });
+    async function connectWhatsApp() {
+    try {
+        // Fetch the Meta App ID from the backend
+        const response = await fetch("http://localhost:5000/config");
+        const config = await response.json();
+        const clientId = config.metaAppId;
+
+        if (!clientId) {
+            console.error("Meta App ID is missing!");
+            alert("Error: Meta App ID is not set on the server.");
+            return;
+        }
+
+        // Define the redirect URI and OAuth scope
+        const redirectUri = "http://localhost:5000/whatsapp-callback";
+        const scope = "whatsapp_business_messaging whatsapp_business_management";
+
+        // Construct the authentication URL
+        const authUrl = `https://www.facebook.com/v16.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code`;
+
+        console.log("Redirecting to WhatsApp OAuth:", authUrl);
+        window.location.href = authUrl;
+
+    } catch (error) {
+        console.error("Error fetching Meta App ID:", error);
+        alert("Failed to connect to WhatsApp.");
+    }
+}
+
+
+    function saveMessageTemplate() {
+      const message = document.getElementById("whatsapp-message").value;
+      localStorage.setItem("whatsappMessage", message);
+      alert("WhatsApp message template saved successfully!");
+    }
+
+    async function sendWhatsAppMessage(phone, firstName, lastName) {
+    console.log(`Sending WhatsApp message to ${phone} for ${firstName} ${lastName}`);
+
+    // Ensure the phone number has a country code
+    if (!phone.startsWith("+")) {
+        console.error("Invalid phone number format. Must include country code.");
+        return;
+    }
+
+    // Get the saved message template from localStorage
+    const messageTemplate = localStorage.getItem("whatsappMessage") || `Hello ${firstName}, your appointment is completed. Thank you!`;
+
+    try {
+        const response = await fetch("http://localhost:5000/send-whatsapp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, message: messageTemplate })
+        });
+
+        const data = await response.json();
+        console.log("WhatsApp API Response:", data);
+    } catch (error) {
+        console.error("Error sending WhatsApp message:", error);
+    }
+}
+
+</script>
+</body>
+</html>

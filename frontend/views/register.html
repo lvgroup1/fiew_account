@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+</head>
+<body>
+  <h1>Register</h1>
+  <form id="registerForm">
+    <input type="text" name="firstName" placeholder="First Name" required>
+    <input type="text" name="lastName" placeholder="Last Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(this);
+      const payload = {
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        confirmPassword: formData.get("confirmPassword")
+      };
+      
+      try {
+        const response = await fetch("http://localhost:5000/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+          alert("Registration successful! Redirecting to login...");
+          // Redirect to the login page on the Express server
+          window.location.href = "http://localhost:5000/login.html";
+        } else {
+          const errorData = await response.json();
+          alert(`Error: ${errorData.error || "Registration failed"}`);
+        }
+      } catch (error) {
+        console.error("Error during registration:", error);
+        alert("Error during registration.");
+      }
+    });
+  </script>
+</body>
+</html>
