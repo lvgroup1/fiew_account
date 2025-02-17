@@ -39,7 +39,7 @@
         if (response.ok) {
           alert("Registration successful! Redirecting to login...");
           // Redirect to the login page on the Express server
-          window.location.href = "http://localhost:5000/login.html";
+          window.location.href = "https://lvgroup1.github.io/fiew_account/fronted/views/login.html";
         } else {
           const errorData = await response.json();
           alert(`Error: ${errorData.error || "Registration failed"}`);
