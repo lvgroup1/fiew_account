@@ -14,7 +14,7 @@ const PORT = 5000;
 app.use(cors()); // Allow frontend requests
 
 // Middleware
-app.use(cors({ origin: "http://127.0.0.1:5500" }));  // (Optional) Allow requests from another origin if needed
+app.use(cors({ origin: "https://lvgroup1.github.io" }));  // (Optional) Allow requests from another origin if needed
 app.use(express.json());
 
 // Serve static files from the frontend/views folder
