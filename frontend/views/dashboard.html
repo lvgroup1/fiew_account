@@ -575,24 +575,28 @@
         document.getElementById("user-email").textContent = userEmail;
       }
     });
-  async function connectWhatsApp() {
+async function connectWhatsApp() {
     try {
-        // Fetch the Meta App ID from the backend
-       const currentHost = window.location.host;
+        const currentHost = window.location.host;
 
-    let redirectUri;
-    if (currentHost.includes("onrender.com")) {
-        redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; // Render deployment
-    } else {
-        redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; // GitHub Pages deployment
-    } 
-        const clientId = "1387100758943618";
+        let redirectUri;
+        if (currentHost.includes("onrender.com")) {
+            redirectUri = "https://fiew-account.onrender.com/whatsapp-callback"; // Render deployment
+        } else {
+            redirectUri = "https://lvgroup1.github.io/fiew_account/whatsapp-callback"; // GitHub Pages deployment
+        }
+
+        // Fetch the Meta App ID from the backend
         const response = await fetch("https://fiew-account.onrender.com/config");
+        if (!response.ok) {
+            throw new Error(`Server response error: ${response.status}`);
+        }
         const config = await response.json();
         
+        const clientId = config.clientId || "1387100758943618"; // Fallback to static ID
 
-        if (!clientId) {
-            console.error("Meta App ID is missing!");
+        if (!clientId || clientId === "1387100758943618") {
+            console.error("Meta App ID is missing or incorrect!");
             alert("Error: Meta App ID is not set on the server.");
             return;
         }
@@ -608,7 +612,7 @@
 
     } catch (error) {
         console.error("Error fetching Meta App ID:", error);
-        alert("Failed to connect to WhatsApp.");
+        alert("Failed to connect to WhatsApp. Please try again later.");
     }
 }
 
