@@ -1,10 +1,10 @@
 const express = require("express");
-const axios = require("axios");
-require("dotenv").config();
+// const axios = require("axios");
+// require("dotenv").config();
 
 const router = express.Router();
 
-app.post("/api/whatsapp-auth", async (req, res) => {
+router.post("/api/whatsapp-auth", async (req, res) => {
     try {
         const { code } = req.body;
         if (!code) {
@@ -17,8 +17,6 @@ app.post("/api/whatsapp-auth", async (req, res) => {
         console.error("Error processing WhatsApp authentication:", error);
         res.status(500).json({ error: "Failed to authenticate WhatsApp." });
     }
-});
-
 });
 
 module.exports = router;
