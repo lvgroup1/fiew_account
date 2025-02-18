@@ -147,3 +147,39 @@ app.get("/config", (req, res) => {
     res.json({ META_APP_ID: process.env.META_APP_ID });
 });
 
+app.post("/send-whatsapp", async (req, res) => {
+    try {
+        const { phone, message } = req.body;
+
+        if (!phone || !message) {
+            return res.status(400).json({ error: "Missing phone number or message." });
+        }
+
+        console.log(`📨 Sending WhatsApp message to ${phone}: "${message}"`);
+
+        // ✅ Send Message via Meta WhatsApp Cloud API
+        const response = await axios.post(
+            `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "text",
+                text: { body: message },
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        console.log("✅ WhatsApp Message Sent Successfully!", response.data);
+
+        res.json({ success: true, message: "WhatsApp message sent successfully!", data: response.data });
+
+    } catch (error) {
+        console.error("❌ Error sending WhatsApp message:", error.response?.data || error.message);
+        res.status(500).json({ error: "Failed to send WhatsApp message.", details: error.response?.data || error.message });
+    }
+});
