@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 
 // ✅ Import Models
 const Client = require("./models/clientSchema");
-const User = require("./models/userSchema");
+const User = require("./models/user"); // ✅ Use user.js instead of userSchema.js
 
 // ✅ Import Routes
 const whatsappRoutes = require("./routes/whatsappRoutes");
@@ -31,10 +31,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-// ✅ Serve static frontend files (Ensure frontend exists at `../frontend/views`)
+// ✅ Serve static frontend files
 app.use(express.static(path.join(__dirname, "../frontend/views")));
 
-// ✅ Use WhatsApp API routes (All endpoints will start with `/api/whatsapp`)
+// ✅ Use WhatsApp API routes
 app.use("/api/whatsapp", whatsappRoutes);
 
 // ✅ Default Route (Basic Status Check)
