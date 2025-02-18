@@ -1,7 +1,7 @@
 const express = require("express");
-
 const router = express.Router();
 
+// ✅ WhatsApp Authentication Route
 router.post("/whatsapp-auth", async (req, res) => {
     try {
         const { code } = req.body;
@@ -17,7 +17,7 @@ router.post("/whatsapp-auth", async (req, res) => {
     }
 });
 
-// Test route to check if this file is working
+// ✅ Test route to check if the file is working
 router.get("/test", (req, res) => {
     res.json({ message: "WhatsApp route is working!" });
 });
