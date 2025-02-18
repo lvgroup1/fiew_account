@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 
 // ✅ Import Models
 const Client = require("./models/clientSchema");
-const User = require("./models/user"); // ✅ Use user.js instead of userSchema.js
+const User = require("./models/User"); // ✅ Use user.js instead of userSchema.js
 
 // ✅ Import Routes
 const whatsappRoutes = require("./routes/whatsappRoutes");
