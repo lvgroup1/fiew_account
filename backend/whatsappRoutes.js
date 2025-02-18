@@ -17,9 +17,9 @@ router.post("/whatsapp-auth", async (req, res) => {
     }
 });
 
-// Example test route
-router.get('/test', (req, res) => {
-    res.send("WhatsApp route is working!");
+// Test route to check if this file is working
+router.get("/test", (req, res) => {
+    res.json({ message: "WhatsApp route is working!" });
 });
 
 module.exports = router;
