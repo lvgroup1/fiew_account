@@ -52,10 +52,11 @@ app.post("/api/whatsapp-auth", async (req, res) => {
     try {
         const { code } = req.body;
         if (!code) {
+            console.error("❌ Missing authorization code.");
             return res.status(400).json({ error: "Missing authorization code." });
         }
 
-        console.log("Received WhatsApp auth code:", code);
+        console.log("✅ Received WhatsApp auth code:", code);
 
         // ✅ Exchange Code for Access Token (Facebook OAuth)
         const response = await axios.post("https://graph.facebook.com/v16.0/oauth/access_token", null, {
@@ -63,17 +64,17 @@ app.post("/api/whatsapp-auth", async (req, res) => {
                 client_id: process.env.META_APP_ID,
                 client_secret: process.env.META_APP_SECRET,
                 redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
-                code: code,
+                code: code, // Ensure this is being correctly passed
             },
         });
 
         if (!response.data.access_token) {
-            console.error("❌ Meta API Error:", response.data);
+            console.error("❌ Meta API Error (No access token returned):", response.data);
             return res.status(400).json({ error: "Failed to get access token from Meta API" });
         }
 
         const accessToken = response.data.access_token;
-        console.log("✅ WhatsApp Auth Successful:", accessToken);
+        console.log("✅ WhatsApp Auth Successful! Access Token:", accessToken);
 
         res.json({ success: true, message: "WhatsApp connected successfully!", accessToken });
 
