@@ -132,4 +132,3 @@ app.get("/config", (req, res) => {
         META_APP_ID: process.env.META_APP_ID
     });
 });
-
