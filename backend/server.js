@@ -128,7 +128,11 @@ app.listen(PORT, () => {
 
 // ✅ Route to return Meta App ID for WhatsApp authentication
 app.get("/config", (req, res) => {
-    res.json({
-        META_APP_ID: process.env.META_APP_ID
-    });
+    if (!process.env.META_APP_ID) {
+        console.error("❌ META_APP_ID is not set in the environment variables.");
+        return res.status(500).json({ error: "META_APP_ID is missing from server." });
+    }
+
+    res.json({ META_APP_ID: process.env.META_APP_ID });
 });
+
