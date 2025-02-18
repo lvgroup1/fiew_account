@@ -5,26 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Callback</title>
     <script>
-async function handleCallback() {
+function handleCallback() {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
     if (!code) {
-        console.error("No OAuth code found in URL.");
+        console.error("❌ No authorization code found in URL!");
+        alert("Authentication failed: No code received.");
         return;
     }
 
-    console.log("Sending code to backend:", code);
+    console.log("✅ Sending code to backend:", code);
 
-    try {
-        const response = await fetch("https://fiew-account.onrender.com/api/whatsapp/whatsapp-auth", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ code }),
-})
-
+    fetch("https://fiew-account.onrender.com/api/whatsapp-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error("❌ WhatsApp authentication failed:", data.error);
+            alert("Error: " + data.error);
+        } else {
+            console.log("✅ WhatsApp authentication successful:", data);
+            alert("WhatsApp connected successfully!");
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error processing WhatsApp callback:", error);
+    });
+}
 
         const data = await response.json();
         if (data.success) {
