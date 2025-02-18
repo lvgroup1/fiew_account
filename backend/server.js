@@ -125,3 +125,11 @@ app.use("/api/users", userRoutes);
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
+
+// ✅ Route to return Meta App ID for WhatsApp authentication
+app.get("/config", (req, res) => {
+    res.json({
+        META_APP_ID: process.env.META_APP_ID
+    });
+});
+
