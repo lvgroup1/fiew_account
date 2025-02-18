@@ -152,6 +152,7 @@ app.post("/send-whatsapp", async (req, res) => {
         const { phone, message } = req.body;
 
         if (!phone || !message) {
+            console.error("❌ Missing phone number or message.");
             return res.status(400).json({ error: "Missing phone number or message." });
         }
 
@@ -164,7 +165,7 @@ app.post("/send-whatsapp", async (req, res) => {
                 messaging_product: "whatsapp",
                 to: phone,
                 type: "text",
-                text: { body: message },
+                text: { body: message }, // ✅ Allow custom messages
             },
             {
                 headers: {
@@ -175,11 +176,13 @@ app.post("/send-whatsapp", async (req, res) => {
         );
 
         console.log("✅ WhatsApp Message Sent Successfully!", response.data);
-
         res.json({ success: true, message: "WhatsApp message sent successfully!", data: response.data });
 
     } catch (error) {
-        console.error("❌ Error sending WhatsApp message:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to send WhatsApp message.", details: error.response?.data || error.message });
+        console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
+        res.status(500).json({
+            error: "Failed to send WhatsApp message.",
+            details: error.response?.data || error.message
+        });
     }
 });
