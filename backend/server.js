@@ -58,15 +58,19 @@ app.post("/api/whatsapp-auth", async (req, res) => {
 
         console.log("✅ Received WhatsApp auth code:", code);
 
-        // ✅ Exchange Code for Access Token (Facebook OAuth)
+        // ✅ Log the API request before sending it
+        console.log("🔄 Sending request to Meta API...");
+        
         const response = await axios.post("https://graph.facebook.com/v16.0/oauth/access_token", null, {
             params: {
                 client_id: process.env.META_APP_ID,
                 client_secret: process.env.META_APP_SECRET,
                 redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
-                code: code, // Ensure this is being correctly passed
+                code: code,
             },
         });
+
+        console.log("✅ Meta API Response:", response.data);
 
         if (!response.data.access_token) {
             console.error("❌ Meta API Error (No access token returned):", response.data);
@@ -83,6 +87,7 @@ app.post("/api/whatsapp-auth", async (req, res) => {
         res.status(500).json({ error: "Failed to authenticate WhatsApp.", details: error.response?.data || error.message });
     }
 });
+
 
 
 // ✅ CRUD Routes for Clients
