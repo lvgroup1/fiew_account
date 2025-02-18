@@ -430,39 +430,39 @@
 }
 
 
-    function saveClient() {
-        if (!db) {
-            console.error("Database not initialized yet.");
-            return;
-        }
-
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        let phone = document.getElementById('phone').value.trim();
-        const status = document.getElementById('status').value;
-
-        phone = formatPhoneNumber(phone);
-
-        if (firstName && lastName && email && phone) {
-            const transaction = db.transaction(["clients"], "readwrite");
-            const store = transaction.objectStore("clients");
-            const client = { firstName, lastName, email, phone, status };
-
-            const request = store.add(client);
-            request.onsuccess = function() {
-                console.log("Client added successfully:", client);
-                addClientToTable(client);
-                closeAddClientModal();
-            };
-
-            request.onerror = function(event) {
-                console.error("Error adding client:", event.target.error);
-            };
-        } else {
-            alert("Please fill in all fields.");
-        }
+  function saveClient() {
+    if (!db) {
+        console.error("Database not initialized yet.");
+        return;
     }
+
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const status = document.getElementById('status').value;
+
+    if (firstName && lastName && email && phone) {
+        const transaction = db.transaction(["clients"], "readwrite");
+        const store = transaction.objectStore("clients");
+        const client = { firstName, lastName, email, phone, status };
+
+        const request = store.add(client);
+        request.onsuccess = function (event) {
+            client.id = event.target.result; // ✅ Assign the generated ID
+            console.log("✅ Client added successfully:", client);
+
+            addClientToTable(client);
+            closeAddClientModal();
+        };
+
+        request.onerror = function (event) {
+            console.error("❌ Error adding client:", event.target.error);
+        };
+    } else {
+        alert("Please fill in all fields.");
+    }
+}
 
     function loadClients() {
         if (!db) {
