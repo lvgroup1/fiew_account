@@ -627,7 +627,7 @@ async function connectWhatsApp() {
 
   async function sendWhatsAppMessage(phone, message) {
     try {
-        console.log(`📨 Sending WhatsApp message to ${phone} for ${message}`);
+        console.log(`📨 Sending WhatsApp message to ${phone}: "${message}"`);
 
         const response = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
             method: "POST",
