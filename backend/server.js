@@ -1,221 +1,53 @@
-require("dotenv").config();
+require("dotenv").config(); // Load environment variables
 
 const express = require("express");
-const router = express.Router();
-
-const axios = require("axios");
-const whatsappRoutes = require("./routes/whatsappRoutes");
-
-const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const path = require("path");
+const axios = require("axios");
+const mongoose = require("mongoose");
+
+// ✅ Import Models
+const Client = require("./models/clientSchema");
+const User = require("./models/userSchema");
+
+// ✅ Import Routes
+const whatsappRoutes = require("./routes/whatsappRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors()); // Allow frontend requests
+// ✅ MongoDB Connection
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// ✅ Middleware setup
+app.use(cors());
+app.use(bodyParser.json());
 app.use(express.json());
 
-// Middleware
-app.use(cors({ origin: "https://lvgroup1.github.io" }));  // (Optional) Allow requests from another origin if needed
-
-// Serve static files from the frontend/views folder
+// ✅ Serve static frontend files (Ensure frontend exists at `../frontend/views`)
 app.use(express.static(path.join(__dirname, "../frontend/views")));
 
-// API Routes (all endpoints here are prefixed with /api)
-app.use("/api", userRoutes);
+// ✅ Use WhatsApp API routes (All endpoints will start with `/api/whatsapp`)
+app.use("/api/whatsapp", whatsappRoutes);
 
-// Add the WhatsApp Authentication Routes
-app.use('/api/whatsapp', whatsappRoutes); 
-
-// Default route
+// ✅ Default Route (Basic Status Check)
 app.get("/", (req, res) => {
-    res.send("Server is running...");
+    res.send("✅ Server is running successfully!");
 });
 
-// ✅ API health check
+// ✅ API Health Check Route
 app.get("/api/status", (req, res) => {
     res.json({ status: "ok" });
 });
 
-// Connect to MongoDB
-async function testMongoDBConnection() {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("✅ MongoDB connected successfully");
-  } catch (error) {
-    console.error("❌ MongoDB connection failed:", error);
-  }
-}
-
-testMongoDBConnection();
-
-
-// Define Client Schema
-const clientSchema = new mongoose.Schema({
-  userId: String, // To associate clients with a user
-  firstName: String,
-  lastName: String,
-  email: String,
-  phone: String,
-  status: String
-});
-const Client = mongoose.model("Client", clientSchema);
-
-// Add Client (POST request)
-app.post("/api/clients", async (req, res) => {
-  try {
-    const newClient = new Client(req.body);
-    await newClient.save();
-    res.status(201).json(newClient);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get Clients for a User (GET request)
-app.get("/api/clients/:userId", async (req, res) => {
-  try {
-    const clients = await Client.find({ userId: req.params.userId });
-    res.status(200).json(clients);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// WhatsApp OAuth Callback Route
-app.get("/whatsapp-callback", async (req, res) => {
-    const { code } = req.query;
-    if (!code) {
-        return res.status(400).send("Authorization failed: No code received");
-    }
-
-    try {
-        const response = await axios.get("https://graph.facebook.com/v16.0/oauth/access_token", {
-            params: {
-                client_id: process.env.META_APP_ID, // Ensure this is set in .env
-                client_secret: process.env.META_APP_SECRET, // Ensure this is set in .env
-                redirect_uri: "https://fiew-account.onrender.com/whatsapp-callback",
-                code: code
-            }
-        });
-
-        const accessToken = response.data.access_token;
-        console.log("WhatsApp Access Token:", accessToken);
-
-        // Store the token securely (Session, DB, or LocalStorage)
-        
-        res.redirect("/dashboard.html#whatsapp");
-
-    } catch (error) {
-        console.error("WhatsApp authentication error:", error.response ? error.response.data : error.message);
-        res.status(500).send(`WhatsApp authentication failed: ${JSON.stringify(error.response?.data || error.message)}`);
-    }
-});
-
-const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-
-app.post("/send-whatsapp", async (req, res) => {
-    const { phone, message } = req.body;
-
-    try {
-        const response = await axios.post(
-            `https://graph.facebook.com/v16.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
-            {
-                messaging_product: "whatsapp",
-                to: phone,
-                type: "text",
-                text: { body: message }
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-
-        console.log("✅ WhatsApp Message Sent:", response.data);
-        console.log("📩 Message ID:", response.data.messages[0]?.id || "No message ID");
-
-        res.json({ success: true, data: response.data });
-
-    } catch (error) {
-        console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
-        res.status(500).json({ error: error.response?.data || error.message });
-    }
-});
-
-// Handle WhatsApp OAuth callback
-router.post("/whatsapp-auth", async (req, res) => {
-    try {
-        const { code } = req.body;  // Get the OAuth code from the frontend
-
-        if (!code) {
-            return res.status(400).json({ error: "Missing OAuth code" });
-        }
-
-        // Exchange the code for an access token
-        const tokenResponse = await axios.post(
-            `https://graph.facebook.com/v16.0/oauth/access_token`,
-            null,
-            {
-                params: {
-                    client_id: process.env.META_APP_ID, // Your Meta App ID
-                    client_secret: process.env.META_APP_SECRET, // Your Meta App Secret
-                    redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
-                    code: code,
-                },
-            }
-        );
-
-        const accessToken = tokenResponse.data.access_token;
-        if (!accessToken) {
-            return res.status(400).json({ error: "Failed to get access token" });
-        }
-
-        // Store accessToken in database (user-specific)
-        // Here, you would save it in MongoDB or IndexedDB
-
-        res.json({ success: true, message: "WhatsApp connected successfully!" });
-
-    } catch (error) {
-        console.error("WhatsApp authentication error:", error.response?.data || error.message);
-        res.status(500).json({ error: "Failed to authenticate WhatsApp." });
-    }
-});
-
-
-// Start the server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-// API route to return the Meta App ID
-app.get("/config", (req, res) => {
-    const metaAppId = process.env.META_APP_ID;
-    if (!metaAppId) {
-        return res.status(500).json({ error: "Meta App ID is missing in environment variables" });
-    }
-    res.json({ clientId: metaAppId });
-});
-
-
-app.post("/webhook", (req, res) => {
-    console.log("📬 Incoming Webhook Event:", req.body);
-
-    const messagingEvent = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (messagingEvent) {
-        console.log("📩 Message Sent:", messagingEvent.id);
-    }
-
-    res.sendStatus(200);
-});
-
+// ✅ WhatsApp Authentication Route
 app.post("/api/whatsapp-auth", async (req, res) => {
     try {
         const { code } = req.body;
@@ -223,10 +55,73 @@ app.post("/api/whatsapp-auth", async (req, res) => {
             return res.status(400).json({ error: "Missing authorization code." });
         }
 
-        console.log("Received WhatsApp auth code:", code);
-        res.json({ message: "WhatsApp authentication successful", code });
+        // ✅ Exchange Code for Access Token (Facebook OAuth)
+        const response = await axios.post("https://graph.facebook.com/v16.0/oauth/access_token", null, {
+            params: {
+                client_id: process.env.META_APP_ID,
+                client_secret: process.env.META_APP_SECRET,
+                redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
+                code: code,
+            },
+        });
+
+        const accessToken = response.data.access_token;
+        if (!accessToken) {
+            return res.status(400).json({ error: "Failed to get access token" });
+        }
+
+        console.log("✅ WhatsApp Auth Successful:", accessToken);
+        res.json({ success: true, message: "WhatsApp connected successfully!", accessToken });
+
     } catch (error) {
-        console.error("Error processing WhatsApp authentication:", error);
+        console.error("❌ WhatsApp Auth Error:", error.response?.data || error.message);
         res.status(500).json({ error: "Failed to authenticate WhatsApp." });
     }
+});
+
+// ✅ CRUD Routes for Clients
+app.post("/api/clients", async (req, res) => {
+    try {
+        const newClient = new Client(req.body);
+        await newClient.save();
+        res.status(201).json({ message: "Client added successfully!", client: newClient });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to add client" });
+    }
+});
+
+app.get("/api/clients", async (req, res) => {
+    try {
+        const clients = await Client.find();
+        res.json(clients);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch clients" });
+    }
+});
+
+app.put("/api/clients/:id", async (req, res) => {
+    try {
+        const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: "Client updated!", client: updatedClient });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update client" });
+    }
+});
+
+app.delete("/api/clients/:id", async (req, res) => {
+    try {
+        await Client.findByIdAndDelete(req.params.id);
+        res.json({ message: "Client deleted!" });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete client" });
+    }
+});
+
+// ✅ User Authentication Routes (Login/Register)
+const userRoutes = require("./routes/userRoutes");
+app.use("/api/users", userRoutes);
+
+// ✅ Start the Server
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
