@@ -481,28 +481,30 @@
     }
 
     function addClientToTable(client) {
-        const table = document.querySelector("#crm table tbody");
-        if (!table) {
-            console.error("Error: Clients table not found.");
-            return;
-        }
-
-        const newRow = table.insertRow();
-        newRow.innerHTML = `<td>${client.firstName} ${client.lastName}</td>
-                            <td>
-                                <select class="status-select" onchange="updateStatus(this, ${client.id})">
-                                    <option value="New">New</option>
-                                    <option value="Scheduled">Scheduled</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Canceled">Canceled</option>
-                                </select>
-                            </td>
-                            <td>${client.email}</td>
-                            <td>${client.phone}</td>
-                            <td><button class="delete-btn" onclick="deleteClient(${client.id})" style="display:none;">🗑️</button></td>`;
-        
-        newRow.querySelector(".status-select").value = client.status;
+    const table = document.querySelector("#crm table tbody");
+    if (!table) {
+        console.error("Error: Clients table not found.");
+        return;
     }
+
+    const newRow = table.insertRow();
+    newRow.innerHTML = `
+        <td>${client.firstName} ${client.lastName}</td>
+        <td>
+            <select class="status-select" onchange="updateStatus(this, ${client.id})">
+                <option value="New">New</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Canceled">Canceled</option>
+            </select>
+        </td>
+        <td>${client.email}</td>
+        <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td> <!-- ✅ Ensure + is displayed -->
+        <td><button class="delete-btn" onclick="deleteClient(${client.id})" style="display:none;">🗑️</button></td>`;
+
+    newRow.querySelector(".status-select").value = client.status;
+}
+
 
     function updateStatus(selectElement, clientId) {
         if (!db) {
