@@ -136,10 +136,6 @@ app.delete("/api/clients/:id", async (req, res) => {
 const userRoutes = require("./routes/userRoutes");
 app.use("/api/users", userRoutes);
 
-// ✅ Start the Server
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
 
 // ✅ Route to return Meta App ID for WhatsApp authentication
 app.get("/config", (req, res) => {
@@ -190,4 +186,9 @@ app.post("/send-whatsapp", async (req, res) => {
             details: error.response?.data || error.message
         });
     }
+});
+
+// ✅ Start the Server
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
