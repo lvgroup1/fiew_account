@@ -149,23 +149,24 @@ app.get("/config", (req, res) => {
 
 app.post("/send-whatsapp", async (req, res) => {
     try {
-        const { phone, message } = req.body;
+        const { phone } = req.body;
 
-        if (!phone || !message) {
-            console.error("❌ Missing phone number or message.");
-            return res.status(400).json({ error: "Missing phone number or message." });
+        if (!phone) {
+            return res.status(400).json({ error: "Missing phone number." });
         }
 
-        console.log(`📨 Sending WhatsApp message to ${phone}: "${message}"`);
-
-        // ✅ Send Message via Meta WhatsApp Cloud API
         const response = await axios.post(
             `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
             {
                 messaging_product: "whatsapp",
                 to: phone,
-                type: "text",
-                text: { body: message }, // ✅ Allow custom messages
+                type: "template",
+                template: {
+                    name: "hello_world", // ✅ Your approved template name
+                    language: {
+                        code: "en_US"
+                    }
+                }
             },
             {
                 headers: {
@@ -175,8 +176,8 @@ app.post("/send-whatsapp", async (req, res) => {
             }
         );
 
-        console.log("✅ WhatsApp Message Sent Successfully!", response.data);
-        res.json({ success: true, message: "WhatsApp message sent successfully!", data: response.data });
+        console.log("✅ WhatsApp Template Message Sent Successfully!", response.data);
+        res.json({ success: true, message: "Template message sent!", data: response.data });
 
     } catch (error) {
         console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
