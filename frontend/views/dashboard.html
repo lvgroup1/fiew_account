@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <title>CRM Dashboard</title>
   <style>
     :root {
@@ -289,6 +290,8 @@
       <div class="button-container">
         <button onclick="toggleEditMode()">Edit</button>
         <button onclick="openAddClientModal()">Add</button>
+        <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
+        <button onclick="document.getElementById('excelFile').click()">Import</button>
       </div>
       <div class="table-container">
         <table>
@@ -646,6 +649,48 @@ async function connectWhatsApp() {
     } catch (error) {
         console.error("❌ Error sending WhatsApp message:", error);
     }
+}
+
+    function handleExcelImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+        jsonData.forEach(client => {
+            const formattedClient = {
+                firstName: client["First Name"] || client["firstName"] || "",
+                lastName: client["Last Name"] || client["lastName"] || "",
+                email: client["Email"] || client["email"] || "",
+                phone: formatPhoneNumber(client["Phone"] || client["phone"] || ""),
+                status: client["Status"] || "New"
+            };
+
+            // Save to IndexedDB
+            const transaction = db.transaction(["clients"], "readwrite");
+            const store = transaction.objectStore("clients");
+            const request = store.add(formattedClient);
+
+            request.onsuccess = function(event) {
+                formattedClient.id = event.target.result;
+                addClientToTable(formattedClient);
+            };
+
+            request.onerror = function(event) {
+                console.error("Error importing client:", event.target.error);
+            };
+        });
+
+        alert("✅ Excel data imported!");
+    };
+    reader.readAsArrayBuffer(file);
 }
 
 
