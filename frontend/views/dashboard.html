@@ -712,6 +712,18 @@ async function connectWhatsApp() {
     });
 }
 
+    function filterByStatus() {
+    const filter = document.getElementById("statusFilter").value;
+    const rows = document.querySelectorAll("#crm table tbody tr");
+
+    rows.forEach(row => {
+        const statusCell = row.querySelector("td:nth-child(2) select");
+        const status = statusCell ? statusCell.value : "";
+
+        row.style.display = (filter === "" || status === filter) ? "" : "none";
+    });
+}
+
 
 
 </script>
