@@ -293,6 +293,7 @@
         <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
         <button onclick="document.getElementById('excelFile').click()">Import</button>
       </div>
+      <input type="text" id="clientSearch" placeholder="Search clients..." class="input-box" onkeyup="filterTable()">
       <div class="table-container">
         <table>
           <thead>
@@ -692,6 +693,18 @@ async function connectWhatsApp() {
     };
     reader.readAsArrayBuffer(file);
 }
+
+    function filterTable() {
+    const input = document.getElementById("clientSearch");
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll("#crm table tbody tr");
+
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+}
+
 
 
 </script>
