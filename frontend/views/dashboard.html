@@ -288,19 +288,24 @@
   <div id="crm" class="page crm-container">
     <div class="content-box">
       <div class="button-container">
+          <div style="flex-grow: 1; display: flex; justify-content: flex-start;">
+    <span onclick="toggleFilters()" style="cursor: pointer; font-size: 14px;">🔍 Filter</span>
+          </div>
         <button onclick="toggleEditMode()">Edit</button>
         <button onclick="openAddClientModal()">Add</button>
         <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
         <button onclick="document.getElementById('excelFile').click()">Import</button>
       </div>
-      <input type="text" id="clientSearch" placeholder="Search clients..." class="input-box" onkeyup="filterTable()">
-      <select id="statusFilter" class="input-box" onchange="filterByStatus()">
-        <option value="">All Statuses</option>
-        <option value="New">New</option>
-        <option value="Scheduled">Scheduled</option>
-        <option value="Completed">Completed</option>
-        <option value="Canceled">Canceled</option>
-      </select>
+<div id="filterControls" style="display: none; margin: 10px 0; display: flex; gap: 10px;">
+  <input type="text" id="clientSearch" placeholder="Search clients..." class="input-box" onkeyup="applyCombinedFilters()" style="flex: 1;">
+  <select id="statusFilter" class="input-box" onchange="applyCombinedFilters()" style="flex: 1;">
+    <option value="">All Statuses</option>
+    <option value="New">New</option>
+    <option value="Scheduled">Scheduled</option>
+    <option value="Completed">Completed</option>
+    <option value="Canceled">Canceled</option>
+  </select>
+</div>
       <div class="table-container">
         <table>
           <thead>
@@ -723,6 +728,29 @@ async function connectWhatsApp() {
         row.style.display = (filter === "" || status === filter) ? "" : "none";
     });
 }
+
+    function toggleFilters() {
+    const filterControls = document.getElementById("filterControls");
+    filterControls.style.display = filterControls.style.display === "none" ? "flex" : "none";
+}
+
+function applyCombinedFilters() {
+    const searchValue = document.getElementById("clientSearch").value.toLowerCase();
+    const statusValue = document.getElementById("statusFilter").value;
+    const rows = document.querySelectorAll("#crm table tbody tr");
+
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const statusCell = row.querySelector("td:nth-child(2) select");
+        const status = statusCell ? statusCell.value : "";
+
+        const matchesSearch = text.includes(searchValue);
+        const matchesStatus = statusValue === "" || status === statusValue;
+
+        row.style.display = matchesSearch && matchesStatus ? "" : "none";
+    });
+}
+
 
 
 
