@@ -262,6 +262,20 @@
       font-size: 14px;
       color: #666;
     }
+    .filter-bar {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.filter-bar.show {
+  max-height: 100px; /* adjust if needed */
+  opacity: 1;
+}
+
   </style>
 </head>
 <body>
@@ -296,7 +310,7 @@
         <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
         <button onclick="document.getElementById('excelFile').click()">Import</button>
       </div>
-<div id="filterControls" style="display: none; margin: 10px 0; display: flex; gap: 10px;">
+<div id="filterControls" style="display: none; margin: 10px 0; gap: 10px; flex-wrap: wrap;" class="filter-bar">
   <input type="text" id="clientSearch" placeholder="Search clients..." class="input-box" onkeyup="applyCombinedFilters()" style="flex: 1;">
   <select id="statusFilter" class="input-box" onchange="applyCombinedFilters()" style="flex: 1;">
     <option value="">All Statuses</option>
@@ -729,10 +743,19 @@ async function connectWhatsApp() {
     });
 }
 
-    function toggleFilters() {
-    const filterControls = document.getElementById("filterControls");
-    filterControls.style.display = filterControls.style.display === "none" ? "flex" : "none";
+function toggleFilters() {
+    const bar = document.getElementById("filterControls");
+    bar.classList.toggle("show");
+
+    // Reset filters when hiding
+    if (!bar.classList.contains("show")) {
+        document.getElementById("clientSearch").value = "";
+        document.getElementById("statusFilter").value = "";
+        applyCombinedFilters();
+    }
 }
+
+
 
 function applyCombinedFilters() {
     const searchValue = document.getElementById("clientSearch").value.toLowerCase();
