@@ -158,16 +158,27 @@ app.post("/send-whatsapp", async (req, res) => {
         const response = await axios.post(
             `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
             {
-                messaging_product: "whatsapp",
-                to: phone,
-                type: "template",
-                template: {
-                    name: "hello_world", // ✅ Your approved template name
-                    language: {
-                        code: "en_US"
-                    }
-                }
-            },
+  messaging_product: "whatsapp",
+  to: phone,
+  type: "template",
+  template: {
+    name: "hello_world",
+    language: {
+      code: "en_US"
+    },
+    components: [
+      {
+        type: "body",
+        parameters: [
+          {
+            type: "text",
+            text: "Gabriella" // 👈 or any name/value to fill {{1}}
+          }
+        ]
+      }
+    ]
+  }
+}
             {
                 headers: {
                     Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
