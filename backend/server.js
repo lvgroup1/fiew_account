@@ -162,22 +162,21 @@ app.post("/send-whatsapp", async (req, res) => {
   to: phone,
   type: "template",
   template: {
-    name: "hello_world",
-    language: {
-      code: "en_US"
-    },
-    components: [
-      {
-        type: "body",
-        parameters: [
-          {
-            type: "text",
-            text: "Gabriella" // 👈 or any name/value to fill {{1}}
-          }
-        ]
-      }
-    ]
-  }
+  name: "hello_world",
+  language: {
+    code: "en_US"
+  },
+  components: [
+    {
+      type: "body",
+      parameters: [
+        {
+          type: "text",
+          text: "Gabriella"
+        }
+      ]
+    }
+  ]
 }
             {
                 headers: {
