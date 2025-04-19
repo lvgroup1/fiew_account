@@ -202,22 +202,25 @@ console.log("🏷️ Display Name:", display_name);
 const userEmail = req.query.email || "test@example.com";
 
 // Step 6: Save credentials to User model
-await User.findOneAndUpdate(
-  { email: userEmail },
-  {
-    whatsapp: {
-      access_token,
-      phone_number_id,
-      display_name,
-      connected_at: new Date()
-    }
-  },
-  { new: true, upsert: true }
-);
+   await User.findOneAndUpdate(
+      { email: userEmail },
+      {
+        whatsapp: {
+          access_token,
+          phone_number_id,
+          display_name,
+          connected_at: new Date()
+        }
+      },
+      { new: true, upsert: true }
+    );
 
-console.log("✅ WhatsApp credentials saved to user:", userEmail);
-res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
-
+    res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
+  } catch (error) {
+    console.error("❌ Token exchange failed:", error.response?.data || error.message);
+    res.status(500).send("❌ Failed to retrieve access token from Meta.");
+  }
+}); // ✅ THIS LINE WAS MISSING
 
 app.post("/send-whatsapp", async (req, res) => {
     try {
@@ -271,7 +274,9 @@ app.post("/send-whatsapp", async (req, res) => {
     }
 });
 
+// Your routes...
+
 // ✅ Start the Server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
