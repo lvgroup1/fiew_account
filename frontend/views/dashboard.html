@@ -281,9 +281,9 @@
 <body>
   <div class="header">
     <div class="nav-links">
-      <a href="#" onclick="showPage(event, 'home')">Home</a>
-      <a href="#" onclick="showPage(event, 'crm')">CRM</a>
-      <a href="#" onclick="showPage(event, 'whatsapp')">WhatsApp</a>
+      <a href="#" data-page="home">Home</a>
+      <a href="#" data-page="crm">CRM</a>
+      <a href="#" data-page="whatsapp">WhatsApp</a>
     </div>
     <div class="user-controls">
       <span onclick="showPage(event, 'account')" style="cursor:pointer; color: var(--highlight-color);">👤</span>
@@ -813,6 +813,16 @@ function applyCombinedFilters() {
         row.style.display = matchesSearch && matchesStatus ? "" : "none";
     });
 }
+  
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".nav-links a").forEach(link => {
+        link.addEventListener("click", function (e) {
+          const page = this.getAttribute("onclick").match(/'(.*?)'/)[1];
+          showPage(e, page);
+    });
+  });
+});
+
 
 
 
