@@ -466,39 +466,43 @@
 }
 
 
-  function saveClient() {
-    if (!db) {
-        console.error("Database not initialized yet.");
-        return;
+async function saveClient() {
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const status = document.getElementById('status').value;
+  const ownerEmail = localStorage.getItem("userEmail");
+
+  if (firstName && lastName && email && phone && ownerEmail) {
+    const client = { firstName, lastName, email, phone, status, ownerEmail };
+
+    try {
+      const response = await fetch("https://fiew-account.onrender.com/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(client)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save client to backend.");
+      }
+
+      const savedClient = await response.json();
+      addClientToTable(savedClient.client);
+      closeAddClientModal();
+      console.log("✅ Client saved to backend and table:", savedClient.client);
+
+    } catch (err) {
+      console.error("❌ Error saving client to backend:", err.message);
+      alert("Failed to save client. Please try again.");
     }
 
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const status = document.getElementById('status').value;
-
-    if (firstName && lastName && email && phone) {
-        const transaction = db.transaction(["clients"], "readwrite");
-        const store = transaction.objectStore("clients");
-        const client = { firstName, lastName, email, phone, status };
-
-        const request = store.add(client);
-        request.onsuccess = function (event) {
-            client.id = event.target.result; // ✅ Assign the generated ID
-            console.log("✅ Client added successfully:", client);
-
-            addClientToTable(client);
-            closeAddClientModal();
-        };
-
-        request.onerror = function (event) {
-            console.error("❌ Error adding client:", event.target.error);
-        };
-    } else {
-        alert("Please fill in all fields.");
-    }
+  } else {
+    alert("Please fill in all fields.");
+  }
 }
+
 
 request.onsuccess = function(event) {
     db = event.target.result;
