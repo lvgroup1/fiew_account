@@ -401,19 +401,18 @@
   </div>
   
   <script>
- function showPage(event, page) {
-  event.preventDefault();
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const target = document.getElementById(page);
-  if (target) target.style.display = 'flex';
-}
+function showPage(event, pageId) {
+  if (event) event.preventDefault();
 
-document.querySelectorAll('.nav-links a').forEach(link => {
-  link.addEventListener('click', function(e) {
-    const page = this.dataset.page;
-    showPage(e, page);
-  });
-});
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+
+  const target = document.getElementById(pageId);
+  if (target) {
+    target.style.display = 'flex';
+  } else {
+    console.error(`Page ID '${pageId}' not found`);
+  }
+}
     
     let db;
     let editMode = false;
@@ -822,6 +821,9 @@ document.addEventListener("DOMContentLoaded", function () {
       showPage(e, page);
     });
   });
+
+  // Show home by default
+  showPage(null, "home");
 });
 
 
