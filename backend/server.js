@@ -147,6 +147,36 @@ app.get("/config", (req, res) => {
     res.json({ META_APP_ID: process.env.META_APP_ID });
 });
 
+app.get("/api/whatsapp/callback", async (req, res) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return res.status(400).send("❌ Missing authorization code.");
+  }
+
+  try {
+    const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
+      params: {
+        client_id: process.env.META_APP_ID,
+        client_secret: process.env.META_APP_SECRET,
+        redirect_uri: "https://fiew-account.onrender.com/api/whatsapp/callback",
+        code: code,
+      },
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+    console.log("✅ Access token received:", accessToken);
+
+    // 👉 OPTIONAL: Save token to DB, link to user, etc.
+
+    res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
+  } catch (error) {
+    console.error("❌ Token exchange failed:", error.response?.data || error.message);
+    res.status(500).send("❌ Failed to retrieve access token from Meta.");
+  }
+});
+
+
 app.post("/send-whatsapp", async (req, res) => {
     try {
         const { phone } = req.body;
