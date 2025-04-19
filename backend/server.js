@@ -274,6 +274,12 @@ app.post("/send-whatsapp", async (req, res) => {
     }
 });
 
+const debugRes = await axios.get(
+  `https://graph.facebook.com/debug_token?input_token=${access_token}&access_token=${APP_ID}|${APP_SECRET}`
+);
+
+console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+
 // Your routes...
 
 // ✅ Start the Server
