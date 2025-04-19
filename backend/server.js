@@ -27,9 +27,9 @@ mongoose
 
 // ✅ Middleware setup
 app.use(cors({
-    origin: "https://lvgroup1.github.io", // ✅ Allow your GitHub frontend
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+  origin: "https://lvgroup1.github.io",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
 app.use(bodyParser.json());
 app.use(express.json());
