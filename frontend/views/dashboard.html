@@ -575,7 +575,7 @@ async function loadClients() {
         }
 
         const selectedStatus = selectElement.value;
-        console.log(`Updating status for client ${clientId} to: ${selectedStatus}`); // ✅ Check if this runs
+        console.log("Updating status for client " + clientId); // ✅ Correct
         
         const transaction = db.transaction(["clients"], "readwrite");
         const store = transaction.objectStore("clients");
