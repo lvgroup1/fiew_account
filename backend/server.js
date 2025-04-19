@@ -179,11 +179,13 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 
     const access_token = tokenResponse.data.access_token;
 
-    const wabaRes = await axios.get("https://graph.facebook.com/v18.0/me/whatsapp_business_account", {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
+const wabaRes = await axios.get("https://graph.facebook.com/v18.0/me", {
+  headers: { Authorization: `Bearer ${access_token}` },
+  params: { fields: "whatsapp_business_account" }
+});
 
-    const wabaId = wabaRes.data.id;
+const wabaId = wabaRes.data.whatsapp_business_account?.id;
+console.log("✅ WABA ID:", wabaId);
 
     const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
       headers: { Authorization: `Bearer ${access_token}` }
