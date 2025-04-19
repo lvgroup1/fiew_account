@@ -350,6 +350,7 @@
     </select>
     <button onclick="saveClient()">Save</button>
     <button onclick="closeAddClientModal()">Cancel</button>
+    <button class="delete-btn" onclick="deleteClient(${client.id || 0})" style="display:none;">🗑️</button>
   </div>
   
   <div id="account" class="page account-container">
@@ -598,21 +599,34 @@ async function loadClients() {
         };
     }
 
-    function deleteClient(clientId) {
-        if (!db) {
-            console.error("Database not initialized yet.");
-            return;
-        }
+    async function deleteClient(clientId) {
+  if (!clientId) {
+    console.error("❌ Client ID is missing.");
+    return;
+  }
 
-        const transaction = db.transaction(["clients"], "readwrite");
-        const store = transaction.objectStore("clients");
-        const deleteRequest = store.delete(clientId);
+  const confirmed = confirm("Are you sure you want to delete this client?");
+  if (!confirmed) return;
 
-        deleteRequest.onsuccess = function() {
-            console.log("Client deleted:", clientId);
-            reloadTable();
-        };
+  try {
+    const response = await fetch(`https://fiew-account.onrender.com/api/clients/${clientId}`, {
+      method: "DELETE"
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Error deleting client:", errorData);
+      alert("Failed to delete client.");
+      return;
     }
+
+    console.log("🗑️ Client deleted:", clientId);
+    reloadTable(); // ⬅️ Re-fetch and reload clients in the UI
+  } catch (error) {
+    console.error("❌ Error deleting client:", error);
+    alert("An error occurred while deleting the client.");
+  }
+}
 
     function reloadTable() {
         const table = document.querySelector("#crm table tbody");
