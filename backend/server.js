@@ -94,13 +94,13 @@ app.post("/api/whatsapp-auth", async (req, res) => {
 
 
 // ✅ CRUD Routes for Clients
-// Add new client
 app.post("/api/clients", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, status, ownerEmail } = req.body;
 
-    const owner = await User.findOne({ email: ownerEmail });
-    if (!owner) return res.status(404).json({ error: "User not found" });
+    // find user by email to get user._id
+    const user = await User.findOne({ email: ownerEmail });
+    if (!user) return res.status(404).json({ error: "User not found." });
 
     const newClient = new Client({
       firstName,
@@ -108,11 +108,12 @@ app.post("/api/clients", async (req, res) => {
       email,
       phone,
       status,
-      owner: owner._id
+      owner: user._id // ✅ Link to user
     });
 
     await newClient.save();
     res.status(201).json({ message: "Client added successfully!", client: newClient });
+
   } catch (error) {
     res.status(500).json({ error: "Failed to add client" });
   }
