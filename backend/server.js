@@ -15,6 +15,13 @@ const whatsappRoutes = require("./routes/whatsappRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const corsOptions = {
+  origin: "https://lvgroup1.github.io",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+app.use(cors(corsOptions));
 
 // ✅ MongoDB Connection
 mongoose
@@ -25,12 +32,6 @@ mongoose
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ✅ Middleware setup
-app.use(cors({
-  origin: "https://lvgroup1.github.io",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
 app.use(bodyParser.json());
 app.use(express.json());
 
