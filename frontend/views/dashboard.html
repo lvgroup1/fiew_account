@@ -437,6 +437,18 @@
         }
         targetPage.style.display = "flex";
     }
+    document.addEventListener("DOMContentLoaded", function () {
+  // define showPage here
+  function showPage(event, page) {
+    event.preventDefault();
+    document.querySelectorAll('.page').forEach(p => p.style.display = "none");
+    const targetPage = document.getElementById(page);
+    if (targetPage) {
+      targetPage.style.display = "flex";
+    }
+  }
+});
+
 
     function openAddClientModal() {
         console.log("Button clicked - opening modal");
