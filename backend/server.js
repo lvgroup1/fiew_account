@@ -155,6 +155,7 @@ app.get("/api/whatsapp/callback", async (req, res) => {
   }
 
   try {
+    // Step 1: Exchange code for access token
     const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
       params: {
         client_id: process.env.META_APP_ID,
@@ -167,7 +168,31 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     const accessToken = tokenResponse.data.access_token;
     console.log("✅ Access token received:", accessToken);
 
-    // 👉 OPTIONAL: Save token to DB, link to user, etc.
+    // Step 2: Fetch WhatsApp Business Account ID
+    const wabaRes = await axios.get("https://graph.facebook.com/v18.0/me/whatsapp_business_account", {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const wabaId = wabaRes.data.id;
+    console.log("✅ WABA ID:", wabaId);
+
+    // Step 3: Fetch Phone Number ID
+    const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const phoneNumberId = phoneRes.data.data[0]?.id;
+    const phoneDisplayName = phoneRes.data.data[0]?.display_name;
+
+    console.log("✅ Phone Number ID:", phoneNumberId);
+    console.log("📞 Display Name:", phoneDisplayName);
+
+    // Step 4: Save or log credentials (TODO: replace with DB insert)
+    console.log("🌐 Store these credentials:", {
+      accessToken,
+      phoneNumberId,
+      phoneDisplayName
+    });
 
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
   } catch (error) {
