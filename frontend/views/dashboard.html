@@ -401,7 +401,7 @@
   </div>
   
   <script>
-     function showPage(event, page) {
+  function showPage(event, page) {
     event.preventDefault();
     document.querySelectorAll('.page').forEach(p => p.style.display = "none");
 
@@ -413,6 +413,7 @@
 
     targetPage.style.display = "flex";
   }
+    
     let db;
     let editMode = false;
     const request = indexedDB.open("crmDatabase", 1);
