@@ -286,7 +286,7 @@
       <a href="#" data-page="whatsapp">WhatsApp</a>
     </div>
     <div class="user-controls">
-      <span onclick="showPage(event, 'account')" style="cursor:pointer; color: var(--highlight-color);">👤</span>
+      <span data-page="account" class="nav-account" style="cursor:pointer; color: var(--highlight-color);">👤</span>
       <span class="logout" onclick="logout()">Log-out</span>
     </div>
   </div>
@@ -403,14 +403,12 @@
   <script>
 function showPage(event, pageId) {
   if (event) event.preventDefault();
-
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-
-  const target = document.getElementById(pageId);
-  if (target) {
-    target.style.display = 'flex';
+  const targetPage = document.getElementById(pageId);
+  if (targetPage) {
+    targetPage.style.display = 'flex';
   } else {
-    console.error(`Page ID '${pageId}' not found`);
+    console.error("Page not found:", pageId);
   }
 }
     
@@ -539,29 +537,43 @@ async function loadClients() {
 }
 
 
-    function addClientToTable(client) {
-    const table = document.querySelector("#crm table tbody");
-    if (!table) {
-        console.error("Error: Clients table not found.");
-        return;
-    }
+function addClientToTable(client) {
+  const table = document.querySelector("#crm table tbody");
+  if (!table) {
+    console.error("Error: Clients table not found.");
+    return;
+  }
 
-    const newRow = table.insertRow();
-    newRow.innerHTML = `
-        <td>${client.firstName} ${client.lastName}</td>
-        <td>
-            <select class="status-select" onchange="updateStatus(this, ${client.id})">
-                <option value="New">New</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Completed">Completed</option>
-                <option value="Canceled">Canceled</option>
-            </select>
-        </td>
-        <td>${client.email}</td>
-        <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td> <!-- ✅ Ensure + is displayed -->
-        <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>
+  const newRow = table.insertRow();
 
-    newRow.querySelector(".status-select").value = client.status;
+  newRow.innerHTML = `
+    <td>${client.firstName} ${client.lastName}</td>
+    <td>
+      <select class="status-select">
+        <option value="New">New</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Completed">Completed</option>
+        <option value="Canceled">Canceled</option>
+      </select>
+    </td>
+    <td>${client.email}</td>
+    <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td>
+    <td><button class="delete-btn" style="display:none;">🗑️</button></td>
+  `;
+
+  // Set the select value
+  newRow.querySelector(".status-select").value = client.status;
+
+  // Add change event
+  newRow.querySelector(".status-select").addEventListener("change", function () {
+    updateStatus(this, client._id || client.id); // handles both MongoDB and IndexedDB
+  });
+
+  // Add delete button logic
+  const deleteBtn = newRow.querySelector(".delete-btn");
+  deleteBtn.addEventListener("click", function () {
+    deleteClient(client._id || client.id);
+  });
 }
 
 
@@ -815,6 +827,7 @@ function applyCombinedFilters() {
 }
   
 document.addEventListener("DOMContentLoaded", function () {
+  // Handle top nav links
   document.querySelectorAll(".nav-links a").forEach(link => {
     link.addEventListener("click", function (e) {
       const page = this.dataset.page;
@@ -822,7 +835,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Show home by default
+  // Handle the 👤 icon
+  const accountIcon = document.querySelector(".nav-account");
+  if (accountIcon) {
+    accountIcon.addEventListener("click", function (e) {
+      const page = this.dataset.page;
+      showPage(e, page);
+    });
+  }
+
+  // Show home page initially
   showPage(null, "home");
 });
 
