@@ -94,18 +94,13 @@ app.post("/api/whatsapp-auth", async (req, res) => {
 
 
 // ✅ CRUD Routes for Clients
+// Add new client
 app.post("/api/clients", async (req, res) => {
   try {
-    const { email, firstName, lastName, phone, status } = req.body;
+    const { firstName, lastName, email, phone, status, ownerEmail } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing user email." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
+    const owner = await User.findOne({ email: ownerEmail });
+    if (!owner) return res.status(404).json({ error: "User not found" });
 
     const newClient = new Client({
       firstName,
@@ -113,7 +108,7 @@ app.post("/api/clients", async (req, res) => {
       email,
       phone,
       status,
-      owner: user._id // 👈 assign the user's ID here
+      owner: owner._id
     });
 
     await newClient.save();
@@ -123,21 +118,15 @@ app.post("/api/clients", async (req, res) => {
   }
 });
 
-
+// Fetch only this user's clients
 app.get("/api/clients", async (req, res) => {
-  const email = req.query.email;
-
-  if (!email) {
-    return res.status(400).json({ error: "Missing user email." });
-  }
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(404).json({ error: "User not found." });
-  }
-
   try {
-    const clients = await Client.find({ owner: user._id });
+    const ownerEmail = req.query.email;
+    const owner = await User.findOne({ email: ownerEmail });
+
+    if (!owner) return res.status(404).json({ error: "User not found" });
+
+    const clients = await Client.find({ owner: owner._id });
     res.json(clients);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch clients" });
