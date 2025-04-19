@@ -274,11 +274,25 @@ app.post("/send-whatsapp", async (req, res) => {
     }
 });
 
-const debugRes = await axios.get(
-  `https://graph.facebook.com/debug_token?input_token=${access_token}&access_token=${APP_ID}|${APP_SECRET}`
-);
+async function debugAccessToken(token) {
+  try {
+    const debugRes = await axios.get(
+      `https://graph.facebook.com/debug_token`, {
+        params: {
+          input_token: token,
+          access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+        }
+      }
+    );
+    console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+  } catch (error) {
+    console.error("❌ Failed to debug token:", error.response?.data || error.message);
+  }
+}
 
-console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+// ✅ Then call it
+debugAccessToken(access_token);
+
 
 // Your routes...
 
