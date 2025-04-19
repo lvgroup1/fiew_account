@@ -8,23 +8,22 @@ const axios = require("axios");
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  // Optional: company name, role, etc.
-
+  name: String,
+  email: String,
+  password: String,
   whatsapp: {
-    access_token: { type: String },
-    phone_number_id: { type: String },
-    display_name: { type: String },
+    access_token: String,
+    phone_number_id: String,
+    display_name: String,
     connected_at: { type: Date, default: Date.now }
   }
 });
 
+// ✅ Only compile if not already done
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);
+
 // ✅ Import Models
 const Client = require("./models/clientSchema");
-const User = mongoose.model("User", userSchema);
-module.exports = User;
 
 // ✅ Import Routes
 const whatsappRoutes = require("./routes/whatsappRoutes");
