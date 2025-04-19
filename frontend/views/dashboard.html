@@ -815,16 +815,14 @@ function applyCombinedFilters() {
     });
 }
   
-    document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".nav-links a").forEach(link => {
-        link.addEventListener("click", function (e) {
-          const page = this.getAttribute("onclick").match(/'(.*?)'/)[1];
-          showPage(e, page);
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", function (e) {
+      const page = this.dataset.page;
+      showPage(e, page);
     });
   });
 });
-
-
 
 
 
