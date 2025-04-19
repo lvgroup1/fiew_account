@@ -511,25 +511,31 @@ request.onsuccess = function(event) {
 };
 
 async function loadClients() {
+  try {
     const userEmail = localStorage.getItem("userEmail");
     if (!userEmail) {
-        console.error("User email not found in localStorage.");
-        return;
+      console.warn("No user email found in localStorage.");
+      return;
     }
 
-    try {
-        const response = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
-        const clients = await response.json();
-
-        if (!Array.isArray(clients)) {
-            throw new Error("Invalid response format");
-        }
-
-        clients.forEach(client => addClientToTable(client));
-    } catch (error) {
-        console.error("Failed to load clients:", error);
+    const response = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch clients");
     }
+
+    const clients = await response.json();
+    console.log("📦 Loaded clients from server:", clients);
+
+    const table = document.querySelector("#crm table tbody");
+    table.innerHTML = ""; // Clear existing table
+
+    clients.forEach(client => addClientToTable(client));
+
+  } catch (error) {
+    console.error("❌ Error loading clients:", error);
+  }
 }
+
 
     function addClientToTable(client) {
     const table = document.querySelector("#crm table tbody");
