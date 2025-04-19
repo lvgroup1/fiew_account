@@ -401,18 +401,19 @@
   </div>
   
   <script>
-  function showPage(event, page) {
-    event.preventDefault();
-    document.querySelectorAll('.page').forEach(p => p.style.display = "none");
+ function showPage(event, page) {
+  event.preventDefault();
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const target = document.getElementById(page);
+  if (target) target.style.display = 'flex';
+}
 
-    const targetPage = document.getElementById(page);
-    if (!targetPage) {
-      console.error(`Error: Page '${page}' not found.`);
-      return;
-    }
-
-    targetPage.style.display = "flex";
-  }
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', function(e) {
+    const page = this.dataset.page;
+    showPage(e, page);
+  });
+});
     
     let db;
     let editMode = false;
