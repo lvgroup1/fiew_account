@@ -161,47 +161,62 @@ app.get("/api/whatsapp/callback", async (req, res) => {
       },
     });
 
-    const access_token = tokenResponse.data.access_token;
+const access_token = tokenResponse.data.access_token;
+console.log("✅ Access token received:", access_token);
 
-const wabaRes = await axios.get("https://graph.facebook.com/v18.0/me", {
+// Step 1: Get User ID
+const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
   headers: { Authorization: `Bearer ${access_token}` },
-  params: { fields: "whatsapp_business_account" }
+  params: { fields: "id" }
 });
+const userId = meRes.data.id;
+console.log("✅ User ID:", userId);
 
-const wabaId = wabaRes.data.whatsapp_business_account?.id;
-console.log("✅ WABA ID:", wabaId);
-
-    const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-
-    const phone_number_id = phoneRes.data.data[0]?.id;
-    const display_name = phoneRes.data.data[0]?.display_name;
-
-    // ✅ STEP: Identify user (adjust to your auth method)
-    const userEmail = req.query.email || "test@example.com"; // replace with actual user identifier
-
-    // ✅ SAVE the WhatsApp connection to that user
-    await User.findOneAndUpdate(
-      { email: userEmail },
-      {
-        whatsapp: {
-          access_token,
-          phone_number_id,
-          display_name,
-          connected_at: new Date()
-        }
-      },
-      { new: true }
-    );
-
-    console.log("✅ WhatsApp credentials saved to user:", userEmail);
-    res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
-  } catch (error) {
-    console.error("❌ Token exchange failed:", error.response?.data || error.message);
-    res.status(500).send("❌ Failed to retrieve access token from Meta.");
-  }
+// Step 2: Get Business ID
+const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
+  headers: { Authorization: `Bearer ${access_token}` }
 });
+const businessId = bizRes.data.data[0]?.id;
+if (!businessId) throw new Error("❌ No business ID found.");
+console.log("🏢 Business ID:", businessId);
+
+// Step 3: Get WhatsApp Business Account ID
+const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
+  headers: { Authorization: `Bearer ${access_token}` }
+});
+const wabaId = wabaRes.data.data[0]?.id;
+if (!wabaId) throw new Error("❌ No WhatsApp Business Account found.");
+console.log("📱 WABA ID:", wabaId);
+
+// Step 4: Get Phone Number ID and Display Name
+const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
+  headers: { Authorization: `Bearer ${access_token}` }
+});
+const phone_number_id = phoneRes.data.data[0]?.id;
+const display_name = phoneRes.data.data[0]?.display_name;
+
+console.log("📞 Phone Number ID:", phone_number_id);
+console.log("🏷️ Display Name:", display_name);
+
+// Step 5: Identify the CRM user (customize based on login/auth)
+const userEmail = req.query.email || "test@example.com";
+
+// Step 6: Save credentials to User model
+await User.findOneAndUpdate(
+  { email: userEmail },
+  {
+    whatsapp: {
+      access_token,
+      phone_number_id,
+      display_name,
+      connected_at: new Date()
+    }
+  },
+  { new: true, upsert: true }
+);
+
+console.log("✅ WhatsApp credentials saved to user:", userEmail);
+res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
 
 
 app.post("/send-whatsapp", async (req, res) => {
