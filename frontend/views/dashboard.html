@@ -305,6 +305,7 @@
           <div style="flex-grow: 1; display: flex; justify-content: flex-start;">
     <span onclick="toggleFilters()" style="cursor: pointer; font-size: 14px;">🔍 Filter</span>
           </div>
+        <button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button>
         <button onclick="toggleEditMode()">Edit</button>
         <button onclick="openAddClientModal()">Add</button>
         <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
@@ -350,7 +351,6 @@
     </select>
     <button onclick="saveClient()">Save</button>
     <button onclick="closeAddClientModal()">Cancel</button>
-    <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>
   </div>
   
   <div id="account" class="page account-container">
