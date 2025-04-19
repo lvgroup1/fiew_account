@@ -402,6 +402,18 @@
   </div>
   
   <script>
+     function showPage(event, page) {
+    event.preventDefault();
+    document.querySelectorAll('.page').forEach(p => p.style.display = "none");
+
+    const targetPage = document.getElementById(page);
+    if (!targetPage) {
+      console.error(`Error: Page '${page}' not found.`);
+      return;
+    }
+
+    targetPage.style.display = "flex";
+  }
     let db;
     let editMode = false;
     const request = indexedDB.open("crmDatabase", 1);
@@ -426,28 +438,6 @@
         alert("Logging out...");
         window.location.href = "https://lvgroup1.github.io/fiew_account/frontend/views/login.html";
     }
-
-    function showPage(event, page) {
-        event.preventDefault();
-        document.querySelectorAll('.page').forEach(p => p.style.display = "none");
-        const targetPage = document.getElementById(page);
-        if (!targetPage) {
-            console.error(`Error: Page '${page}' not found.`);
-            return;
-        }
-        targetPage.style.display = "flex";
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-  // define showPage here
-  function showPage(event, page) {
-    event.preventDefault();
-    document.querySelectorAll('.page').forEach(p => p.style.display = "none");
-    const targetPage = document.getElementById(page);
-    if (targetPage) {
-      targetPage.style.display = "flex";
-    }
-  }
-});
 
 
     function openAddClientModal() {
