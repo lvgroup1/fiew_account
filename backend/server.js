@@ -21,7 +21,6 @@ const corsOptions = {
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 };
-app.use(cors(corsOptions));
 
 // ✅ MongoDB Connection
 mongoose
@@ -31,6 +30,8 @@ mongoose
   })
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use(express.json());
