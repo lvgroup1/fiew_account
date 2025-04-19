@@ -350,7 +350,7 @@
     </select>
     <button onclick="saveClient()">Save</button>
     <button onclick="closeAddClientModal()">Cancel</button>
-    <button class="delete-btn" onclick="deleteClient(${client.id || 0})" style="display:none;">🗑️</button>
+    <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>
   </div>
   
   <div id="account" class="page account-container">
@@ -599,7 +599,7 @@ async function loadClients() {
         };
     }
 
-    async function deleteClient(clientId) {
+async function deleteClient(clientId) {
   if (!clientId) {
     console.error("❌ Client ID is missing.");
     return;
@@ -621,7 +621,7 @@ async function loadClients() {
     }
 
     console.log("🗑️ Client deleted:", clientId);
-    reloadTable(); // ⬅️ Re-fetch and reload clients in the UI
+    reloadTable();
   } catch (error) {
     console.error("❌ Error deleting client:", error);
     alert("An error occurred while deleting the client.");
