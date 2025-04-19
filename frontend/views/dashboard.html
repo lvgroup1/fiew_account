@@ -305,7 +305,6 @@
           <div style="flex-grow: 1; display: flex; justify-content: flex-start;">
     <span onclick="toggleFilters()" style="cursor: pointer; font-size: 14px;">🔍 Filter</span>
           </div>
-        <button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button>
         <button onclick="toggleEditMode()">Edit</button>
         <button onclick="openAddClientModal()">Add</button>
         <input type="file" id="excelFile" style="display: none;" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
@@ -558,7 +557,7 @@ async function loadClients() {
         </td>
         <td>${client.email}</td>
         <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td> <!-- ✅ Ensure + is displayed -->
-        <td><button class="delete-btn" onclick="deleteClient(${client.id})" style="display:none;">🗑️</button></td>`;
+        <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>;
 
     newRow.querySelector(".status-select").value = client.status;
 }
