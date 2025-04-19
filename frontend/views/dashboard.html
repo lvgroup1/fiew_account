@@ -500,21 +500,32 @@
     }
 }
 
-    function loadClients() {
-        if (!db) {
-            console.error("Database not initialized yet.");
-            return;
+request.onsuccess = function(event) {
+    db = event.target.result;
+    console.log("IndexedDB connected successfully.");
+    loadClients(); // ✅ This now loads user-specific clients from the backend
+};
+
+async function loadClients() {
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) {
+        console.error("User email not found in localStorage.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
+        const clients = await response.json();
+
+        if (!Array.isArray(clients)) {
+            throw new Error("Invalid response format");
         }
 
-        const transaction = db.transaction(["clients"], "readonly");
-        const store = transaction.objectStore("clients");
-        const request = store.getAll();
-
-        request.onsuccess = function(event) {
-            console.log("Clients loaded:", request.result);
-            request.result.forEach(client => addClientToTable(client));
-        };
+        clients.forEach(client => addClientToTable(client));
+    } catch (error) {
+        console.error("Failed to load clients:", error);
     }
+}
 
     function addClientToTable(client) {
     const table = document.querySelector("#crm table tbody");
