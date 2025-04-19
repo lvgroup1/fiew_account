@@ -559,7 +559,7 @@ async function loadClients() {
         </td>
         <td>${client.email}</td>
         <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td> <!-- ✅ Ensure + is displayed -->
-        <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>;
+        <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>
 
     newRow.querySelector(".status-select").value = client.status;
 }
@@ -606,28 +606,22 @@ async function deleteClient(clientId) {
     return;
   }
 
-  const confirmed = confirm("Are you sure you want to delete this client?");
-  if (!confirmed) return;
-
   try {
     const response = await fetch(`https://fiew-account.onrender.com/api/clients/${clientId}`, {
       method: "DELETE"
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Error deleting client:", errorData);
-      alert("Failed to delete client.");
-      return;
+      throw new Error("Failed to delete client");
     }
 
-    console.log("🗑️ Client deleted:", clientId);
+    console.log("✅ Client deleted:", clientId);
     reloadTable();
   } catch (error) {
     console.error("❌ Error deleting client:", error);
-    alert("An error occurred while deleting the client.");
   }
 }
+
 
     function reloadTable() {
         const table = document.querySelector("#crm table tbody");
