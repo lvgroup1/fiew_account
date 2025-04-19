@@ -577,40 +577,44 @@ function addClientToTable(client) {
 }
 
 
-    function updateStatus(selectElement, clientId) {
-        if (!db) {
-            console.error("Database not initialized yet.");
-            return;
-        }
+function updateStatus(selectElement, clientId) {
+    const selectedStatus = selectElement.value;
+    console.log("Updating status for client " + clientId);
 
-        if (!clientId) {
-            console.error("Error: Client ID is undefined.");
-            return;
-        }
+    // Update on server
+    fetch(`https://fiew-account.onrender.com/api/clients/${clientId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: selectedStatus }),
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to update status on server");
+      console.log("✅ Status updated on server");
+    })
+    .catch(err => {
+      console.error("❌ Server update failed:", err);
+    });
 
-        const selectedStatus = selectElement.value;
-        console.log("Updating status for client " + clientId); // ✅ Correct
-        
-        const transaction = db.transaction(["clients"], "readwrite");
-        const store = transaction.objectStore("clients");
-        
-        const getRequest = store.get(clientId);
-        getRequest.onsuccess = function(event) {
-            let client = getRequest.result;
-            if (client) {
-                client.status = selectedStatus;
-                const updateRequest = store.put(client);
-                updateRequest.onsuccess = function() {
-                    console.log("Status updated in IndexedDB");
+    // Update locally in IndexedDB (optional)
+    const transaction = db.transaction(["clients"], "readwrite");
+    const store = transaction.objectStore("clients");
+    const getRequest = store.get(clientId);
 
-                // ✅ Call WhatsApp API when status is "Completed"
+    getRequest.onsuccess = function (event) {
+        let client = event.target.result;
+        if (client) {
+            client.status = selectedStatus;
+            const updateRequest = store.put(client);
+            updateRequest.onsuccess = function () {
+                console.log("✅ Status updated in IndexedDB");
                 if (selectedStatus === "Completed") {
                     sendWhatsAppMessage(client.phone, client.firstName, client.lastName);
-                   }
-                };
-            }
-        };
-    }
+                }
+            };
+        }
+    };
+}
+
 
 async function deleteClient(clientId) {
   if (!clientId) {
