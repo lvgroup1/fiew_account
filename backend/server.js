@@ -162,7 +162,27 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     });
 
 const access_token = tokenResponse.data.access_token;
-console.log("✅ Access token received:", access_token);
+console.log("✅ Access token received:", access_token); // ✅ Move this up
+
+// 🕵️ Debug granted scopes (optional but useful)
+async function debugAccessToken(token) {
+  try {
+    const debugRes = await axios.get(
+      `https://graph.facebook.com/debug_token`,
+      {
+        params: {
+          input_token: token,
+          access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+        }
+      }
+    );
+    console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+  } catch (error) {
+    console.error("❌ Failed to debug token:", error.response?.data || error.message);
+  }
+}
+
+debugAccessToken(access_token);
 
 // Step 1: Get User ID
 const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
@@ -273,25 +293,6 @@ app.post("/send-whatsapp", async (req, res) => {
         });
     }
 });
-
-async function debugAccessToken(token) {
-  try {
-    const debugRes = await axios.get(
-      `https://graph.facebook.com/debug_token`, {
-        params: {
-          input_token: token,
-          access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
-        }
-      }
-    );
-    console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
-  } catch (error) {
-    console.error("❌ Failed to debug token:", error.response?.data || error.message);
-  }
-}
-
-// ✅ Then call it
-debugAccessToken(access_token);
 
 
 // Your routes...
