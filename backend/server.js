@@ -186,35 +186,36 @@ app.post("/send-whatsapp", async (req, res) => {
         }
 
         const response = await axios.post(
-            `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-            {
-  messaging_product: "whatsapp",
-  to: phone,
-  type: "template",
-  template: {
-  name: "hello_world",
-  language: {
-    code: "en_US"
-  },
-  components: [
-    {
-      type: "body",
-      parameters: [
+  `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+  {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "template",
+    template: {
+      name: "hello_world",
+      language: {
+        code: "en_US"
+      },
+      components: [
         {
-          type: "text",
-          text: "Gabriella"
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: "Gabriella"
+            }
+          ]
         }
       ]
     }
-  ]
-}
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
 
         console.log("✅ WhatsApp Template Message Sent Successfully!", response.data);
         res.json({ success: true, message: "Template message sent!", data: response.data });
