@@ -7,9 +7,24 @@ const path = require("path");
 const axios = require("axios");
 const mongoose = require("mongoose");
 
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  // Optional: company name, role, etc.
+
+  whatsapp: {
+    access_token: { type: String },
+    phone_number_id: { type: String },
+    display_name: { type: String },
+    connected_at: { type: Date, default: Date.now }
+  }
+});
+
 // ✅ Import Models
 const Client = require("./models/clientSchema");
-const User = require("./models/User"); // ✅ Use user.js instead of userSchema.js
+const User = mongoose.model("User", userSchema);
+module.exports = User;
 
 // ✅ Import Routes
 const whatsappRoutes = require("./routes/whatsappRoutes");
@@ -150,12 +165,9 @@ app.get("/config", (req, res) => {
 app.get("/api/whatsapp/callback", async (req, res) => {
   const { code } = req.query;
 
-  if (!code) {
-    return res.status(400).send("❌ Missing authorization code.");
-  }
+  if (!code) return res.status(400).send("❌ Missing authorization code.");
 
   try {
-    // Step 1: Exchange code for access token
     const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
       params: {
         client_id: process.env.META_APP_ID,
@@ -165,35 +177,39 @@ app.get("/api/whatsapp/callback", async (req, res) => {
       },
     });
 
-    const accessToken = tokenResponse.data.access_token;
-    console.log("✅ Access token received:", accessToken);
+    const access_token = tokenResponse.data.access_token;
 
-    // Step 2: Fetch WhatsApp Business Account ID
     const wabaRes = await axios.get("https://graph.facebook.com/v18.0/me/whatsapp_business_account", {
-      headers: { Authorization: `Bearer ${accessToken}` }
+      headers: { Authorization: `Bearer ${access_token}` }
     });
 
     const wabaId = wabaRes.data.id;
-    console.log("✅ WABA ID:", wabaId);
 
-    // Step 3: Fetch Phone Number ID
     const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
+      headers: { Authorization: `Bearer ${access_token}` }
     });
 
-    const phoneNumberId = phoneRes.data.data[0]?.id;
-    const phoneDisplayName = phoneRes.data.data[0]?.display_name;
+    const phone_number_id = phoneRes.data.data[0]?.id;
+    const display_name = phoneRes.data.data[0]?.display_name;
 
-    console.log("✅ Phone Number ID:", phoneNumberId);
-    console.log("📞 Display Name:", phoneDisplayName);
+    // ✅ STEP: Identify user (adjust to your auth method)
+    const userEmail = req.query.email || "test@example.com"; // replace with actual user identifier
 
-    // Step 4: Save or log credentials (TODO: replace with DB insert)
-    console.log("🌐 Store these credentials:", {
-      accessToken,
-      phoneNumberId,
-      phoneDisplayName
-    });
+    // ✅ SAVE the WhatsApp connection to that user
+    await User.findOneAndUpdate(
+      { email: userEmail },
+      {
+        whatsapp: {
+          access_token,
+          phone_number_id,
+          display_name,
+          connected_at: new Date()
+        }
+      },
+      { new: true }
+    );
 
+    console.log("✅ WhatsApp credentials saved to user:", userEmail);
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
   } catch (error) {
     console.error("❌ Token exchange failed:", error.response?.data || error.message);
