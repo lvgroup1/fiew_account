@@ -268,14 +268,23 @@ const userEmail = req.query.email || "test@example.com";
 
 app.post("/send-whatsapp", async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, email } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ error: "Missing phone number." });
+    if (!phone || !email) {
+      return res.status(400).json({ error: "Missing phone number or email." });
     }
 
+    // Fetch WhatsApp credentials from user DB
+    const user = await User.findOne({ email });
+    if (!user || !user.whatsapp || !user.whatsapp.access_token || !user.whatsapp.phone_number_id) {
+      return res.status(403).json({ error: "❌ WhatsApp not connected for this user." });
+    }
+
+    const token = user.whatsapp.access_token;
+    const phone_number_id = user.whatsapp.phone_number_id;
+
     const response = await axios.post(
-      `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
       {
         messaging_product: "whatsapp",
         to: phone,
@@ -287,7 +296,7 @@ app.post("/send-whatsapp", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -304,7 +313,6 @@ app.post("/send-whatsapp", async (req, res) => {
     });
   }
 });
-
 
 
 // Your routes...
