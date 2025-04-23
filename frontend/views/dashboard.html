@@ -591,14 +591,17 @@ function updateStatus(selectedStatus, client) {
       // 2. WhatsApp message if completed
       if (selectedStatus === "Completed") {
         const message = `Hello ${client.firstName}, your request has been completed! 🎉`;
-        sendWhatsAppMessage(client.phone, message);
+        const userEmail = localStorage.getItem("userEmail");
+
+        // ✅ Update here:
+        sendWhatsAppMessage(client.phone, message, userEmail);
       }
     })
     .catch((err) => {
       console.error("❌ Server update failed:", err);
     });
 }
-
+    
 
 async function deleteClient(clientId) {
   if (!clientId) {
