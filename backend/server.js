@@ -267,56 +267,44 @@ const userEmail = req.query.email || "test@example.com";
 }); // ✅ THIS LINE WAS MISSING
 
 app.post("/send-whatsapp", async (req, res) => {
-    try {
-        const { phone } = req.body;
+  try {
+    const { phone } = req.body;
 
-        if (!phone) {
-            return res.status(400).json({ error: "Missing phone number." });
+    if (!phone) {
+      return res.status(400).json({ error: "Missing phone number." });
+    }
+
+    const response = await axios.post(
+      `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: phone,
+        type: "template",
+        template: {
+          name: "hello_world",
+          language: { code: "en_US" }
         }
-
-        const response = await axios.post(
-  `https://graph.facebook.com/v16.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
-  {
-    messaging_product: "whatsapp",
-    to: phone,
-    type: "template",
-    template: {
-      name: "hello_world",
-      language: {
-        code: "en_US"
       },
-      components: [
-        {
-          type: "body",
-          parameters: [
-            {
-              type: "text",
-              text: "Gabriella"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ WhatsApp hello_world message sent!", response.data);
+    res.json({ success: true, message: "hello_world sent!", data: response.data });
+
+  } catch (error) {
+    console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
+    res.status(500).json({
+      error: "Failed to send WhatsApp message.",
+      details: error.response?.data || error.message
+    });
   }
-);
-
-        console.log("✅ WhatsApp Template Message Sent Successfully!", response.data);
-        res.json({ success: true, message: "Template message sent!", data: response.data });
-
-    } catch (error) {
-        console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
-        res.status(500).json({
-            error: "Failed to send WhatsApp message.",
-            details: error.response?.data || error.message
-        });
-    }
 });
+
 
 
 // Your routes...
