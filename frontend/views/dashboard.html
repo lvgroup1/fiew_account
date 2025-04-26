@@ -394,8 +394,10 @@
 
     <!-- ✅ Embed signup button (dynamic redirect_uri) -->
     <h3 style="margin-top:30px;">New Company? Sign up WhatsApp Business</h3>
-    <div id="embedded-signup-button"></div> <!-- Button will be generated here -->
-  </div>
+    <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1387100758943618&redirect_uri=https%3A%2F%2Ffiew-account.onrender.com%2Fapi%2Fwhatsapp%2Fcallback&state=secure123&scope=whatsapp_business_messaging,whatsapp_business_management,business_management" target="_blank">
+      <button style="margin-top:10px;background-color:#007bff">🦩 Start WhatsApp Embedded Signup</button>
+    </a>
+    </div>
 </div>
   
   <script>
@@ -656,7 +658,7 @@ async function connectWhatsApp() {
             ? "https://fiew-account.onrender.com/api/whatsapp/callback"
             : "https://lvgroup1.github.io/fiew_account/frontend/views/whatsapp-callback.html";
 
-        const redirectUri = `${baseRedirect}?email=${encodeURIComponent(userEmail)}`;
+        const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
         console.log("Redirect URI:", redirectUri);
 
         console.log("Fetching config from backend...");
