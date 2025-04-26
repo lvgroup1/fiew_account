@@ -180,7 +180,7 @@ const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/ac
   params: {
     client_id: process.env.META_APP_ID,
     client_secret: process.env.META_APP_SECRET,
-    redirect_uri: `https://fiew-account.onrender.com/api/whatsapp/callback?email=${encodeURIComponent(req.query.email)}`,
+    redirect_uri: `https://fiew-account.onrender.com/api/whatsapp/callback`,
     code: code,
   },
 });
@@ -244,7 +244,8 @@ console.log("📞 Phone Number ID:", phone_number_id);
 console.log("🏷️ Display Name:", display_name);
 
 // Step 5: Identify the CRM user (customize based on login/auth)
-const userEmail = req.query.email || "test@example.com";
+const { code, state } = req.query;
+const userEmail = decodeURIComponent(state) || "test@example.com";
 
 // Step 6: Save credentials to User model
    await User.findOneAndUpdate(
