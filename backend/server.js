@@ -177,13 +177,14 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 
   try {
     const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
-      params: {
-        client_id: process.env.META_APP_ID,
-        client_secret: process.env.META_APP_SECRET,
-        redirect_uri: "https://fiew-account.onrender.com/api/whatsapp/callback",
-        code: code,
-      },
-    });
+  params: {
+    client_id: process.env.META_APP_ID,
+    client_secret: process.env.META_APP_SECRET,
+    redirect_uri: process.env.WHATSAPP_REDIRECT_URI,  // ✅ use from .env here!
+    code: code,
+  },
+});
+
 
 const access_token = tokenResponse.data.access_token;
 console.log("✅ Access token received:", access_token); // ✅ Move this up
