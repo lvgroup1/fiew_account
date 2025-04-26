@@ -172,7 +172,7 @@ app.get("/config", (req, res) => {
 
 app.get("/api/whatsapp/callback", async (req, res) => {
   try {
-    const { code, state } = req.query; // ✅ ONLY THIS, not repeating
+    const { code, state } = req.query; // ✅ Only declare ONCE here!
 
     if (!code) {
       return res.status(400).send("❌ Missing authorization code.");
@@ -191,67 +191,66 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 
     const access_token = tokenResponse.data.access_token;
     console.log("✅ Access token received:", access_token);
-    
-// 🕵️ Debug granted scopes (optional but useful)
-async function debugAccessToken(token) {
-  try {
-    const debugRes = await axios.get(
-      `https://graph.facebook.com/debug_token`,
-      {
-        params: {
-          input_token: token,
-          access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
-        }
+
+    // 🕵️ Debug granted scopes (optional but useful)
+    async function debugAccessToken(token) {
+      try {
+        const debugRes = await axios.get(
+          `https://graph.facebook.com/debug_token`,
+          {
+            params: {
+              input_token: token,
+              access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+            }
+          }
+        );
+        console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+      } catch (error) {
+        console.error("❌ Failed to debug token:", error.response?.data || error.message);
       }
-    );
-    console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
-  } catch (error) {
-    console.error("❌ Failed to debug token:", error.response?.data || error.message);
-  }
-}
+    }
 
-debugAccessToken(access_token);
+    debugAccessToken(access_token);
 
-// Step 1: Get User ID
-const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
-  headers: { Authorization: `Bearer ${access_token}` },
-  params: { fields: "id" }
-});
-const userId = meRes.data.id;
-console.log("✅ User ID:", userId);
+    // Step 1: Get User ID
+    const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
+      headers: { Authorization: `Bearer ${access_token}` },
+      params: { fields: "id" }
+    });
+    const userId = meRes.data.id;
+    console.log("✅ User ID:", userId);
 
-// Step 2: Get Business ID
-const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
-  headers: { Authorization: `Bearer ${access_token}` }
-});
-const businessId = bizRes.data.data[0]?.id;
-if (!businessId) throw new Error("❌ No business ID found.");
-console.log("🏢 Business ID:", businessId);
+    // Step 2: Get Business ID
+    const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const businessId = bizRes.data.data[0]?.id;
+    if (!businessId) throw new Error("❌ No business ID found.");
+    console.log("🏢 Business ID:", businessId);
 
-// Step 3: Get WhatsApp Business Account ID
-const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
-  headers: { Authorization: `Bearer ${access_token}` }
-});
-const wabaId = wabaRes.data.data[0]?.id;
-if (!wabaId) throw new Error("❌ No WhatsApp Business Account found.");
-console.log("📱 WABA ID:", wabaId);
+    // Step 3: Get WhatsApp Business Account ID
+    const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const wabaId = wabaRes.data.data[0]?.id;
+    if (!wabaId) throw new Error("❌ No WhatsApp Business Account found.");
+    console.log("📱 WABA ID:", wabaId);
 
-// Step 4: Get Phone Number ID and Display Name
-const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
-  headers: { Authorization: `Bearer ${access_token}` }
-});
-const phone_number_id = phoneRes.data.data[0]?.id;
-const display_name = phoneRes.data.data[0]?.display_name;
+    // Step 4: Get Phone Number ID and Display Name
+    const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const phone_number_id = phoneRes.data.data[0]?.id;
+    const display_name = phoneRes.data.data[0]?.display_name;
 
-console.log("📞 Phone Number ID:", phone_number_id);
-console.log("🏷️ Display Name:", display_name);
+    console.log("📞 Phone Number ID:", phone_number_id);
+    console.log("🏷️ Display Name:", display_name);
 
-// Step 5: Identify the CRM user (customize based on login/auth)
-const { code, state } = req.query;
-const userEmail = decodeURIComponent(state) || "test@example.com";
+    // Step 5: Identify the CRM user (from 'state' parameter)
+    const userEmail = decodeURIComponent(state) || "test@example.com";
 
-// Step 6: Save credentials to User model
-   await User.findOneAndUpdate(
+    // Step 6: Save credentials to User model
+    await User.findOneAndUpdate(
       { email: userEmail },
       {
         whatsapp: {
@@ -265,11 +264,12 @@ const userEmail = decodeURIComponent(state) || "test@example.com";
     );
 
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
-    } catch (error) {
+    
+  } catch (error) {
     console.error("❌ Token exchange failed:", error.response?.data || error.message);
     res.status(500).send("❌ Failed to retrieve access token from Meta.");
   }
-}); // ✅ THIS LINE WAS MISSING
+});
 
 app.post("/send-whatsapp", async (req, res) => {
   try {
