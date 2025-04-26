@@ -651,8 +651,6 @@ async function connectWhatsApp() {
     try {
         console.log("Connect WhatsApp button clicked!");
 
-        const userEmail = localStorage.getItem("userEmail") || "demo@example.com";
-
         const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
 
         console.log("Fetching config from backend...");
@@ -673,7 +671,9 @@ async function connectWhatsApp() {
         }
 
         const scope = "whatsapp_business_messaging whatsapp_business_management business_management";
-        const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${encodeURIComponent(userEmail)}`;
+        
+        // 🔥 FIXED HERE:
+        const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=secure123`;
 
         console.log("Redirecting to:", authUrl);
         window.location.href = authUrl;
