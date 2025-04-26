@@ -176,11 +176,11 @@ app.get("/api/whatsapp/callback", async (req, res) => {
   if (!code) return res.status(400).send("❌ Missing authorization code.");
 
   try {
-    const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
+const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
   params: {
     client_id: process.env.META_APP_ID,
     client_secret: process.env.META_APP_SECRET,
-    redirect_uri: process.env.WHATSAPP_REDIRECT_URI,  // ✅ use from .env here!
+    redirect_uri: `https://fiew-account.onrender.com/api/whatsapp/callback?email=${encodeURIComponent(req.query.email)}`,
     code: code,
   },
 });
