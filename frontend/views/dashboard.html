@@ -394,7 +394,7 @@
 
     <!-- ✅ Embed signup button (dynamic redirect_uri) -->
     <h3 style="margin-top:30px;">New Company? Sign up WhatsApp Business</h3>
-    <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1387100758943618&redirect_uri=https%3A%2F%2Ffiew-account.onrender.com%2Fapi%2Fwhatsapp%2Fcallback&state=secure123&scope=whatsapp_business_messaging,whatsapp_business_management,business_management" target="_blank">
+    <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1387100758943618&redirect_uri=https%3A%2F%2Ffiew-account.onrender.com%2Fapi%2Fwhatsapp%2Fcallback&scope=whatsapp_business_messaging,whatsapp_business_management,business_management&response_type=code&state=secure123" target="_blank" rel="noopener noreferrer">
   <button style="margin-top:10px;background-color:#007bff">🦩 Start WhatsApp Embedded Signup</button>
     </a>
     </div>
@@ -651,6 +651,8 @@ async function connectWhatsApp() {
     try {
         console.log("Connect WhatsApp button clicked!");
 
+        const userEmail = localStorage.getItem("userEmail") || "demo@example.com";
+
         const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
 
         console.log("Fetching config from backend...");
@@ -671,8 +673,6 @@ async function connectWhatsApp() {
         }
 
         const scope = "whatsapp_business_messaging whatsapp_business_management business_management";
-        
-        // 🔥 FIXED HERE:
         const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=secure123`;
 
         console.log("Redirecting to:", authUrl);
