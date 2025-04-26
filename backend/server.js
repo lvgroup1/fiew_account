@@ -172,7 +172,7 @@ app.get("/config", (req, res) => {
 
 app.get("/api/whatsapp/callback", async (req, res) => {
   try {
-    const { code, state } = req.query; // ✅ FIRST define code
+    const { code, state } = req.query; // ✅ ONLY THIS, not repeating
 
     if (!code) {
       return res.status(400).send("❌ Missing authorization code.");
@@ -185,13 +185,13 @@ app.get("/api/whatsapp/callback", async (req, res) => {
         client_id: process.env.META_APP_ID,
         client_secret: process.env.META_APP_SECRET,
         redirect_uri: "https://fiew-account.onrender.com/api/whatsapp/callback",
-        code: code, // ✅ NOW this is safe to use
+        code: code,
       },
     });
 
     const access_token = tokenResponse.data.access_token;
     console.log("✅ Access token received:", access_token);
-
+    
 // 🕵️ Debug granted scopes (optional but useful)
 async function debugAccessToken(token) {
   try {
@@ -265,7 +265,7 @@ const userEmail = decodeURIComponent(state) || "test@example.com";
     );
 
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
-  } catch (error) {
+    } catch (error) {
     console.error("❌ Token exchange failed:", error.response?.data || error.message);
     res.status(500).send("❌ Failed to retrieve access token from Meta.");
   }
