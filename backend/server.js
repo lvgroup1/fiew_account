@@ -171,23 +171,26 @@ app.get("/config", (req, res) => {
 });
 
 app.get("/api/whatsapp/callback", async (req, res) => {
-  const { code } = req.query;
-
-  if (!code) return res.status(400).send("❌ Missing authorization code.");
-
   try {
-const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
-  params: {
-    client_id: process.env.META_APP_ID,
-    client_secret: process.env.META_APP_SECRET,
-    redirect_uri: `https://fiew-account.onrender.com/api/whatsapp/callback`,
-    code: code,
-  },
-});
+    const { code, state } = req.query; // ✅ FIRST define code
 
+    if (!code) {
+      return res.status(400).send("❌ Missing authorization code.");
+    }
 
-const access_token = tokenResponse.data.access_token;
-console.log("✅ Access token received:", access_token); // ✅ Move this up
+    console.log("✅ Received WhatsApp auth code:", code);
+
+    const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
+      params: {
+        client_id: process.env.META_APP_ID,
+        client_secret: process.env.META_APP_SECRET,
+        redirect_uri: "https://fiew-account.onrender.com/api/whatsapp/callback",
+        code: code, // ✅ NOW this is safe to use
+      },
+    });
+
+    const access_token = tokenResponse.data.access_token;
+    console.log("✅ Access token received:", access_token);
 
 // 🕵️ Debug granted scopes (optional but useful)
 async function debugAccessToken(token) {
