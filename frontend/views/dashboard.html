@@ -382,23 +382,21 @@
       </div>
     </div>
   </div>
-  <div id="whatsapp" class="page whatsapp-container" style="display: none;">
-    <div class="whatsapp-box">
-      <h2>WhatsApp Business Integration</h2>
-      <button onclick="connectWhatsApp()">Connect WhatsApp Business</button>
-      <p id="whatsapp-status"></p>
+ <div id="whatsapp" class="page whatsapp-container" style="display: none;">
+  <div class="whatsapp-box">
+    <h2>WhatsApp Business Integration</h2>
+    <button onclick="connectWhatsApp()">Connect WhatsApp Business</button>
+    <p id="whatsapp-status"></p>
 
-      <h3>Customize Your Message</h3>
-      <textarea id="whatsapp-message" class="whatsapp-message" placeholder="Enter your message...">Hello {name}, your request has been completed! 🎉</textarea>
-      <button onclick="saveMessageTemplate()">Save Message</button>
+    <h3>Customize Your Message</h3>
+    <textarea id="whatsapp-message" class="whatsapp-message" placeholder="Enter your message...">Hello {name}, your request has been completed! 🎉</textarea>
+    <button onclick="saveMessageTemplate()">Save Message</button>
 
-      <!-- ✅ Embed signup button (new) -->
-      <h3 style="margin-top:30px;">New Company? Sign up WhatsApp Business</h3>
-      <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1387100758943618&redirect_uri=https%3A%2F%2Ffiew-account.onrender.com%2Fapi%2Fwhatsapp%2Fcallback&state=secure123&scope=whatsapp_business_messaging,whatsapp_business_management,business_management" target="_blank">
-        <button style="margin-top:10px;background-color:#007bff">🦩 Start WhatsApp Embedded Signup</button>
-      </a>
-    </div>
+    <!-- ✅ Embed signup button (dynamic redirect_uri) -->
+    <h3 style="margin-top:30px;">New Company? Sign up WhatsApp Business</h3>
+    <div id="embedded-signup-button"></div> <!-- Button will be generated here -->
   </div>
+</div>
   
   <script>
 function showPage(event, pageId) {
@@ -838,8 +836,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Show home page initially
   showPage(null, "home");
-});
 
+  // ✅ ✅ ✅ ADD THIS NEW BLOCK BELOW
+  const clientId = "1387100758943618"; // Your Facebook App ID
+  const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback"; // Your backend callback
+  const scopes = [
+    "whatsapp_business_messaging",
+    "whatsapp_business_management",
+    "business_management"
+  ].join(",");
+
+  const signupUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=secure123&scope=${scopes}`;
+
+  const embeddedButton = document.createElement("a");
+  embeddedButton.href = signupUrl;
+  embeddedButton.target = "_blank";
+
+  const button = document.createElement("button");
+  button.style.marginTop = "10px";
+  button.style.backgroundColor = "#007bff";
+  button.textContent = "🦩 Start WhatsApp Embedded Signup";
+
+  embeddedButton.appendChild(button);
+
+  const container = document.getElementById("embedded-signup-button");
+  if (container) {
+    container.appendChild(embeddedButton);
+  }
+});
 
 
 </script>
