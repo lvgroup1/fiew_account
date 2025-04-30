@@ -382,7 +382,8 @@
       </div>
     </div>
   </div>
- <div id="whatsapp" class="page whatsapp-container" style="display: none;">
+<!-- 🟩 WhatsApp Business Signup Integration -->
+<div id="whatsapp" class="page whatsapp-container" style="display: none;">
   <div class="whatsapp-box">
     <h2>WhatsApp Business Integration</h2>
     <button onclick="connectWhatsApp()">Connect WhatsApp Business</button>
@@ -392,14 +393,15 @@
     <textarea id="whatsapp-message" class="whatsapp-message" placeholder="Enter your message...">Hello {name}, your request has been completed! 🎉</textarea>
     <button onclick="saveMessageTemplate()">Save Message</button>
 
-    <!-- ✅ Embed signup button (dynamic redirect_uri) -->
+    <!-- ✅ Embedded Signup via FB JS SDK -->
     <h3 style="margin-top:30px;">New Company? Sign up WhatsApp Business</h3>
-    <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1387100758943618&redirect_uri=https%3A%2F%2Ffiew-account.onrender.com%2Fapi%2Fwhatsapp%2Fcallback&scope=whatsapp_business_messaging,whatsapp_business_management,business_management&response_type=code&state=secure123" target="_blank" rel="noopener noreferrer">
-  <button style="margin-top:10px;background-color:#007bff">🦩 Start WhatsApp Embedded Signup</button>
-    </a>
-    </div>
+    <button onclick="launchWhatsAppSignup()" style="margin-top:10px;background-color:#007bff;color:#fff;padding:10px 20px;border:none;border-radius:5px;cursor:pointer">🧩 Start WhatsApp Signup</button>
+    <pre id="session-info-response"></pre>
+    <pre id="sdk-response"></pre>
+  </div>
 </div>
-  
+  <div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>  
   <script>
 function showPage(event, pageId) {
   if (event) event.preventDefault();
@@ -858,7 +860,67 @@ document.addEventListener("DOMContentLoaded", function () {
     container.appendChild(embeddedButton);
   }
 });
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId: '1387100758943618',
+      autoLogAppEvents: true,
+      xfbml: true,
+      version: 'v22.0'
+    });
+  };
 
+  // ✅ Listener for Embedded Signup messages
+  window.addEventListener('message', (event) => {
+    if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) return;
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'WA_EMBEDDED_SIGNUP') {
+        if (data.event === 'FINISH') {
+          const { phone_number_id, waba_id } = data.data;
+          console.log('✅ Signup finished!');
+          console.log('Phone ID:', phone_number_id, 'WABA ID:', waba_id);
+          // Save WABA and phone ID if needed
+        } else if (data.event === 'CANCEL') {
+          console.warn('❌ Signup cancelled at:', data.data.current_step);
+        } else if (data.event === 'ERROR') {
+          console.error('❌ Error:', data.data.error_message);
+        }
+        document.getElementById("session-info-response").textContent = JSON.stringify(data, null, 2);
+      }
+    } catch (err) {
+      console.log("❓ Non-JSON Response", event.data);
+    }
+  });
+
+  // ✅ Callback after FB.login()
+  const fbLoginCallback = (response) => {
+    if (response.authResponse?.code) {
+      console.log("✅ FB Login success. Code:", response.authResponse.code);
+      fetch("https://fiew-account.onrender.com/api/whatsapp-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: response.authResponse.code })
+      })
+      .then(r => r.json())
+      .then(console.log)
+      .catch(console.error);
+    }
+    document.getElementById("sdk-response").textContent = JSON.stringify(response, null, 2);
+  };
+
+  // ✅ Launch FB Login with WhatsApp Embedded Signup
+  function launchWhatsAppSignup() {
+    FB.login(fbLoginCallback, {
+      config_id: 'YOUR_CONFIG_ID_HERE', // ⛳ Replace with your actual config ID from Facebook Login Configurations
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: {
+        setup: {},
+        featureType: '',
+        sessionInfoVersion: '2',
+      }
+    });
+  }
 
 </script>
 </body>
