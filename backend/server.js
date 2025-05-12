@@ -32,9 +32,8 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 app.use(cors(corsOptions));
-
-app.use(bodyParser.json());
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // ✅ Serve static frontend files
 app.use(express.static(path.join(__dirname, "../frontend/views")));
@@ -280,10 +279,12 @@ app.post("/send-whatsapp", async (req, res) => {
     }
 
     // Fetch WhatsApp credentials from user DB
-    const user = await User.findOne({ email });
-    if (!user || !user.whatsapp || !user.whatsapp.access_token || !user.whatsapp.phone_number_id) {
-      return res.status(403).json({ error: "❌ WhatsApp not connected for this user." });
-    }
+console.log("Request to /send-whatsapp by:", req.body.email);
+const user = await User.findOne({ email: req.body.email });
+if (!user || !user.wa_accessToken) {
+  console.error("User not connected to WhatsApp:", user);
+  return res.status(403).json({ error: "WhatsApp not connected for this user." });
+}
 
     const token = user.whatsapp.access_token;
     const phone_number_id = user.whatsapp.phone_number_id;
