@@ -12,6 +12,7 @@ const User = require("./models/User");
 
 // ✅ Import Routes
 const whatsappRoutes = require("./routes/whatsappRoutes");
+app.use("/whatsapp", whatsappRoutes);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,27 @@ mongoose
   })
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Route to fetch WhatsApp config / status for a user
+router.get("/config", async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (user?.wa_accessToken && user?.wa_phoneNumberId) {
+      // ✅ User already completed embedded signup
+      return res.json({ alreadyConnected: true });
+    }
+
+    // ⚠️ Not connected yet — frontend should continue with embedded signup
+    res.json({ alreadyConnected: false });
+  } catch (err) {
+    console.error("Error in /config route:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 app.use(cors(corsOptions));
 app.use(express.json());
