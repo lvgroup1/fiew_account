@@ -73,6 +73,25 @@ app.get("/api/status", (req, res) => {
     res.json({ status: "ok" });
 });
 
+app.get("/api/whatsapp-credentials", async (req, res) => {
+  const userEmail = req.query.email || req.user?.email; // Depending on your auth setup
+
+  if (!userEmail) {
+    return res.status(400).json({ error: "Missing user email." });
+  }
+
+  const user = await User.findOne({ email: userEmail });
+  if (!user || !user.whatsappToken) {
+    return res.status(404).json({ error: "No WhatsApp credentials" });
+  }
+
+  res.json({
+    accessToken: user.whatsappToken,
+    phoneNumberId: user.phoneNumberId,
+    wabaId: user.wabaId
+  });
+});
+
 // ✅ WhatsApp Authentication Route
 app.post("/api/whatsapp-auth", async (req, res) => {
     try {
