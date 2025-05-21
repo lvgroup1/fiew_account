@@ -11,10 +11,10 @@ const Client = require("./models/clientSchema");
 const User = require("./models/User");
 
 // ✅ Import Routes
+const app = express();
 const whatsappRoutes = require("./routes/whatsappRoutes");
 app.use("/whatsapp", whatsappRoutes);
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {
   origin: "https://lvgroup1.github.io",
