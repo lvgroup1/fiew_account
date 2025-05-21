@@ -692,25 +692,29 @@ async function connectWhatsApp() {
       alert("WhatsApp message template saved successfully!");
     }
 
-async function sendWhatsAppMessage(phone, message, email) {
-  try {
-    console.log(`📨 Sending WhatsApp message to ${phone}: "${message}"`);
+async function sendWhatsAppMessage(client) {
+  if (!localStorage.getItem("whatsapp_access_token")) {
+    alert("❌ WhatsApp not connected. Please complete setup first.");
+    return;
+  }
 
-    const response = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
+  try {
+    const response = await fetch("/send-whatsapp", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, message, email }),
+      body: JSON.stringify({ client }),
+      headers: { "Content-Type": "application/json" }
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(`WhatsApp API Error: ${data.error || "Unknown error"}`);
+      throw new Error(data.error || "Unknown error");
     }
 
-    console.log("✅ WhatsApp message sent successfully!", data);
+    console.log("✅ WhatsApp message sent:", data);
   } catch (error) {
     console.error("❌ Error sending WhatsApp message:", error);
+    alert("Failed to send message. Please check your WhatsApp connection.");
   }
 }
 
