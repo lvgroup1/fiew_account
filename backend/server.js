@@ -33,7 +33,7 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Route to fetch WhatsApp config / status for a user
-router.get("/config", async (req, res) => {
+app.get("/config", async (req, res) => {
   const email = req.query.email;
   if (!email) return res.status(400).json({ error: "Email is required" });
 
