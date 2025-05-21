@@ -874,28 +874,61 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
-  // ✅ Listener for Embedded Signup messages
-  window.addEventListener('message', (event) => {
-    if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) return;
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'WA_EMBEDDED_SIGNUP') {
-        if (data.event === 'FINISH') {
-          const { phone_number_id, waba_id } = data.data;
-          console.log('✅ Signup finished!');
-          console.log('Phone ID:', phone_number_id, 'WABA ID:', waba_id);
-          // Save WABA and phone ID if needed
+   // ✅ Restore WhatsApp credentials from backend on page load
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("https://fiew-account.onrender.com/api/whatsapp-credentials");
+        if (res.ok) {
+          const { accessToken, phoneNumberId, wabaId } = await res.json();
+          if (accessToken && phoneNumberId) {
+            localStorage.setItem("whatsapp_access_token", accessToken);
+            localStorage.setItem("phone_number_id", phoneNumberId);
+            localStorage.setItem("waba_id", wabaId);
+            console.log("✅ WhatsApp credentials restored from backend.");
+          }
+        }
+      } catch (error) {
+        console.error("❌ Failed to restore WhatsApp credentials:", error);
+      }
+    });
+    
+    // ✅ Handle WhatsApp Embedded Signup messages
+    window.addEventListener('message', async (event) => {
+      if (!['https://www.facebook.com', 'https://web.facebook.com'].includes(event.origin)) return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP' && data.event === 'FINISH') {
+          const { phone_number_id, waba_id, access_token } = data.data;
+
+          if (access_token && phone_number_id && waba_id) {
+            localStorage.setItem("whatsapp_access_token", access_token);
+            localStorage.setItem("phone_number_id", phone_number_id);
+            localStorage.setItem("waba_id", waba_id);
+
+            await fetch("https://fiew-account.onrender.com/api/save-whatsapp-credentials", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                accessToken: access_token,
+                phoneNumberId: phone_number_id,
+                wabaId: waba_id
+              })
+            });
+
+            alert("✅ WhatsApp connected successfully!");
+          } else {
+            alert("⚠️ Missing credentials in signup response.");
+          }
         } else if (data.event === 'CANCEL') {
           console.warn('❌ Signup cancelled at:', data.data.current_step);
         } else if (data.event === 'ERROR') {
           console.error('❌ Error:', data.data.error_message);
         }
         document.getElementById("session-info-response").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        console.log("❓ Non-JSON Response", event.data);
       }
-    } catch (err) {
-      console.log("❓ Non-JSON Response", event.data);
-    }
-  });
+    });
 
   // ✅ Callback after FB.login()
   const fbLoginCallback = (response) => {
