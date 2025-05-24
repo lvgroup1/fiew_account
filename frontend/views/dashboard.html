@@ -404,16 +404,13 @@
 
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>  
 <script>
-// ✅ Fix for user-email missing element
+// ✅ Page navigation
 function showPage(event, pageId) {
   if (event) event.preventDefault();
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
   const targetPage = document.getElementById(pageId);
-  if (targetPage) {
-    targetPage.style.display = 'flex';
-  } else {
-    console.error("Page not found:", pageId);
-  }
+  if (targetPage) targetPage.style.display = 'flex';
+  else console.error("Page not found:", pageId);
 }
 
 let db;
@@ -474,24 +471,19 @@ async function saveClient() {
 
   if (firstName && lastName && email && phone && ownerEmail) {
     const client = { firstName, lastName, email, phone, status, ownerEmail };
-
     try {
       const response = await fetch("https://fiew-account.onrender.com/api/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(client)
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save client to backend.");
-      }
-
+      if (!response.ok) throw new Error("Failed to save client to backend.");
       const savedClient = await response.json();
       addClientToTable(savedClient.client);
       closeAddClientModal();
     } catch (err) {
-      console.error("❌ Error saving client to backend:", err.message);
-      alert("Failed to save client. Please try again.");
+      console.error("❌ Error saving client:", err.message);
+      alert("Failed to save client. Try again.");
     }
   } else {
     alert("Please fill in all fields.");
@@ -501,16 +493,9 @@ async function saveClient() {
 async function loadClients() {
   try {
     const userEmail = localStorage.getItem("userEmail");
-    if (!userEmail) {
-      console.warn("No user email found in localStorage.");
-      return;
-    }
-
+    if (!userEmail) return;
     const response = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch clients");
-    }
-
+    if (!response.ok) throw new Error("Failed to fetch clients");
     const clients = await response.json();
     const table = document.querySelector("#crm table tbody");
     table.innerHTML = "";
@@ -545,7 +530,6 @@ function addClientToTable(client) {
 
 function updateStatus(selectedStatus, client) {
   if (!client || !client._id) return;
-
   fetch(`https://fiew-account.onrender.com/api/clients/${client._id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -558,20 +542,17 @@ function updateStatus(selectedStatus, client) {
         sendWhatsAppMessage(client.phone, message);
       }
     })
-    .catch((err) => {
-      console.error("❌ Server update failed:", err);
-    });
+    .catch((err) => console.error("❌ Update failed:", err));
 }
 
 async function deleteClient(clientId) {
   if (!clientId) return;
-
   try {
     const response = await fetch(`https://fiew-account.onrender.com/api/clients/${clientId}`, { method: "DELETE" });
-    if (!response.ok) throw new Error("Failed to delete client");
+    if (!response.ok) throw new Error("Delete failed");
     reloadTable();
-  } catch (error) {
-    console.error("❌ Error deleting client:", error);
+  } catch (err) {
+    console.error("❌ Delete error:", err);
   }
 }
 
@@ -581,29 +562,10 @@ function reloadTable() {
   loadClients();
 }
 
-async function connectWhatsApp() {
-  try {
-    const userEmail = localStorage.getItem("userEmail") || "demo@example.com";
-    const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
-
-    const response = await fetch("https://fiew-account.onrender.com/config");
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-    const config = await response.json();
-    const clientId = config.META_APP_ID;
-    const scope = "whatsapp_business_messaging whatsapp_business_management business_management";
-    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${encodeURIComponent(userEmail)}`;
-    window.location.href = authUrl;
-  } catch (error) {
-    console.error("Error connecting to WhatsApp:", error);
-    alert("Failed to connect to WhatsApp. Check console for details.");
-  }
-}
-
 function saveMessageTemplate() {
   const message = document.getElementById("whatsapp-message").value;
   localStorage.setItem("whatsappMessage", message);
-  alert("WhatsApp message template saved successfully!");
+  alert("Template saved!");
 }
 
 async function sendWhatsAppMessage(phone, message) {
@@ -614,33 +576,48 @@ async function sendWhatsAppMessage(phone, message) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, message, email })
     });
-
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Unknown error");
     console.log("✅ WhatsApp message sent:", data);
   } catch (error) {
-    console.error("❌ Error sending WhatsApp message:", error);
-    alert("Failed to send message. Please check your WhatsApp connection.");
+    console.error("❌ WhatsApp error:", error);
+    alert("WhatsApp send failed.");
   }
 }
 
-// ✅ Restore WhatsApp credentials from backend on page load
-window.addEventListener("DOMContentLoaded", async () => {
+async function connectWhatsApp() {
   try {
-    const email = localStorage.getItem("userEmail");
-    if (!email) return;
+    const userEmail = localStorage.getItem("userEmail") || "demo@example.com";
+    const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
+    const response = await fetch("https://fiew-account.onrender.com/config");
+    if (!response.ok) throw new Error("Failed to fetch config");
+    const config = await response.json();
+    const clientId = config.META_APP_ID;
+    const scope = "whatsapp_business_messaging whatsapp_business_management business_management";
+    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${encodeURIComponent(userEmail)}`;
+    window.location.href = authUrl;
+  } catch (error) {
+    console.error("❌ connectWhatsApp error:", error);
+    alert("WhatsApp connection failed.");
+  }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const email = localStorage.getItem("userEmail");
+  if (!email) return;
+  try {
     const res = await fetch(`https://fiew-account.onrender.com/api/whatsapp-credentials?email=${encodeURIComponent(email)}`);
     if (res.ok) {
       const { accessToken, phoneNumberId, wabaId } = await res.json();
-      if (accessToken && phoneNumberId) {
-        localStorage.setItem("whatsapp_access_token", accessToken);
-        localStorage.setItem("phone_number_id", phoneNumberId);
-        localStorage.setItem("waba_id", wabaId);
-        console.log("✅ WhatsApp credentials restored from backend.");
-      }
+      localStorage.setItem("whatsapp_access_token", accessToken);
+      localStorage.setItem("phone_number_id", phoneNumberId);
+      localStorage.setItem("waba_id", wabaId);
+      console.log("✅ WhatsApp credentials restored.");
+    } else {
+      console.warn("⚠️ WhatsApp credentials not found for", email);
     }
-  } catch (error) {
-    console.error("❌ Failed to restore WhatsApp credentials:", error);
+  } catch (err) {
+    console.error("❌ Restore error:", err);
   }
   debugAccessToken();
 });
@@ -649,11 +626,13 @@ async function debugAccessToken() {
   const token = localStorage.getItem("whatsapp_access_token");
   if (!token) return;
   try {
-    const debugRes = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${encodeURIComponent("1387100758943618|YOUR_APP_SECRET")}`);
-    const data = await debugRes.json();
+    const appId = "1387100758943618";
+    const appSecret = "YOUR_APP_SECRET"; // Replace with actual app secret securely
+    const res = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${appId}|${appSecret}`);
+    const data = await res.json();
     console.log("🔍 Granted scopes:", data.data?.scopes || data);
   } catch (err) {
-    console.error("❌ Token debug failed:", err);
+    console.error("❌ Debug token failed:", err);
   }
 }
 </script>
