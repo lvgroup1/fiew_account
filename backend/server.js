@@ -10,18 +10,25 @@ const mongoose = require("mongoose");
 const Client = require("./models/clientSchema");
 const User = require("./models/User");
 
-// ✅ Import Routes
 const app = express();
-const whatsappRoutes = require("./routes/whatsappRoutes");
-app.use("/whatsapp", whatsappRoutes);
 
-const PORT = process.env.PORT || 5000;
+// ✅ CORS Configuration - allow GitHub Pages frontend
 const corsOptions = {
   origin: "https://lvgroup1.github.io",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 };
+app.use(cors(corsOptions));
+
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// ✅ Import Routes
+const whatsappRoutes = require("./routes/whatsappRoutes");
+app.use("/whatsapp", whatsappRoutes);
+
+const PORT = process.env.PORT || 5000;
 
 // ✅ MongoDB Connection
 mongoose
@@ -31,31 +38,6 @@ mongoose
   })
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// Route to fetch WhatsApp config / status for a user
-app.get("/config", async (req, res) => {
-  const email = req.query.email;
-  if (!email) return res.status(400).json({ error: "Email is required" });
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (user?.wa_accessToken && user?.wa_phoneNumberId) {
-      // ✅ User already completed embedded signup
-      return res.json({ alreadyConnected: true });
-    }
-
-    // ⚠️ Not connected yet — frontend should continue with embedded signup
-    res.json({ alreadyConnected: false });
-  } catch (err) {
-    console.error("Error in /config route:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // ✅ Serve static frontend files
 app.use(express.static(path.join(__dirname, "../frontend/views")));
@@ -81,14 +63,14 @@ app.get("/api/whatsapp-credentials", async (req, res) => {
   }
 
   const user = await User.findOne({ email: userEmail });
-  if (!user || !user.whatsappToken) {
+  if (!user || !user.whatsapp || !user.whatsapp.access_token) {
     return res.status(404).json({ error: "No WhatsApp credentials" });
   }
 
   res.json({
-    accessToken: user.whatsappToken,
-    phoneNumberId: user.phoneNumberId,
-    wabaId: user.wabaId
+    accessToken: user.whatsapp.access_token,
+    phoneNumberId: user.whatsapp.phone_number_id,
+    wabaId: user.whatsapp.waba_id || null
   });
 });
 
@@ -103,9 +85,6 @@ app.post("/api/whatsapp-auth", async (req, res) => {
 
         console.log("✅ Received WhatsApp auth code:", code);
 
-        // ✅ Log the API request before sending it
-        console.log("🔄 Sending request to Meta API...");
-        
         const response = await axios.post("https://graph.facebook.com/v16.0/oauth/access_token", null, {
             params: {
                 client_id: process.env.META_APP_ID,
@@ -133,14 +112,10 @@ app.post("/api/whatsapp-auth", async (req, res) => {
     }
 });
 
-
-
 // ✅ CRUD Routes for Clients
 app.post("/api/clients", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, status, ownerEmail } = req.body;
-
-    // find user by email to get user._id
     const user = await User.findOne({ email: ownerEmail });
     if (!user) return res.status(404).json({ error: "User not found." });
 
@@ -150,7 +125,7 @@ app.post("/api/clients", async (req, res) => {
       email,
       phone,
       status,
-      owner: user._id // ✅ Link to user
+      owner: user._id
     });
 
     await newClient.save();
@@ -161,7 +136,6 @@ app.post("/api/clients", async (req, res) => {
   }
 });
 
-// Fetch only this user's clients
 app.get("/api/clients", async (req, res) => {
   try {
     const ownerEmail = req.query.email;
@@ -175,7 +149,6 @@ app.get("/api/clients", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch clients" });
   }
 });
-
 
 app.put("/api/clients/:id", async (req, res) => {
     try {
@@ -195,30 +168,21 @@ app.delete("/api/clients/:id", async (req, res) => {
   }
 });
 
-// ✅ User Authentication Routes (Login/Register)
 const userRoutes = require("./routes/userRoutes");
 app.use("/api/users", userRoutes);
 
-
-// ✅ Route to return Meta App ID for WhatsApp authentication
 app.get("/config", (req, res) => {
     if (!process.env.META_APP_ID) {
         console.error("❌ META_APP_ID is not set in the environment variables.");
         return res.status(500).json({ error: "META_APP_ID is missing from server." });
     }
-
     res.json({ META_APP_ID: process.env.META_APP_ID });
 });
 
 app.get("/api/whatsapp/callback", async (req, res) => {
   try {
-    const { code, state } = req.query; // ✅ Only declare ONCE here!
-
-    if (!code) {
-      return res.status(400).send("❌ Missing authorization code.");
-    }
-
-    console.log("✅ Received WhatsApp auth code:", code);
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("❌ Missing authorization code.");
 
     const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
       params: {
@@ -230,66 +194,30 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     });
 
     const access_token = tokenResponse.data.access_token;
-    console.log("✅ Access token received:", access_token);
-
-    // 🕵️ Debug granted scopes (optional but useful)
-    async function debugAccessToken(token) {
-      try {
-        const debugRes = await axios.get(
-          `https://graph.facebook.com/debug_token`,
-          {
-            params: {
-              input_token: token,
-              access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
-            }
-          }
-        );
-        console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
-      } catch (error) {
-        console.error("❌ Failed to debug token:", error.response?.data || error.message);
-      }
-    }
-
-    debugAccessToken(access_token);
-
-    // Step 1: Get User ID
     const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
       headers: { Authorization: `Bearer ${access_token}` },
       params: { fields: "id" }
     });
     const userId = meRes.data.id;
-    console.log("✅ User ID:", userId);
 
-    // Step 2: Get Business ID
     const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const businessId = bizRes.data.data[0]?.id;
-    if (!businessId) throw new Error("❌ No business ID found.");
-    console.log("🏢 Business ID:", businessId);
 
-    // Step 3: Get WhatsApp Business Account ID
     const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const wabaId = wabaRes.data.data[0]?.id;
-    if (!wabaId) throw new Error("❌ No WhatsApp Business Account found.");
-    console.log("📱 WABA ID:", wabaId);
 
-    // Step 4: Get Phone Number ID and Display Name
     const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const phone_number_id = phoneRes.data.data[0]?.id;
     const display_name = phoneRes.data.data[0]?.display_name;
 
-    console.log("📞 Phone Number ID:", phone_number_id);
-    console.log("🏷️ Display Name:", display_name);
-
-    // Step 5: Identify the CRM user (from 'state' parameter)
     const userEmail = decodeURIComponent(state) || "test@example.com";
 
-    // Step 6: Save credentials to User model
     await User.findOneAndUpdate(
       { email: userEmail },
       {
@@ -297,6 +225,7 @@ app.get("/api/whatsapp/callback", async (req, res) => {
           access_token,
           phone_number_id,
           display_name,
+          waba_id: wabaId,
           connected_at: new Date()
         }
       },
@@ -304,7 +233,6 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     );
 
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
-    
   } catch (error) {
     console.error("❌ Token exchange failed:", error.response?.data || error.message);
     res.status(500).send("❌ Failed to retrieve access token from Meta.");
@@ -314,18 +242,12 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 app.post("/send-whatsapp", async (req, res) => {
   try {
     const { phone, email } = req.body;
+    if (!phone || !email) return res.status(400).json({ error: "Missing phone number or email." });
 
-    if (!phone || !email) {
-      return res.status(400).json({ error: "Missing phone number or email." });
+    const user = await User.findOne({ email });
+    if (!user || !user.whatsapp || !user.whatsapp.access_token) {
+      return res.status(403).json({ error: "WhatsApp not connected for this user." });
     }
-
-    // Fetch WhatsApp credentials from user DB
-console.log("Request to /send-whatsapp by:", req.body.email);
-const user = await User.findOne({ email: req.body.email });
-if (!user || !user.wa_accessToken) {
-  console.error("User not connected to WhatsApp:", user);
-  return res.status(403).json({ error: "WhatsApp not connected for this user." });
-}
 
     const token = user.whatsapp.access_token;
     const phone_number_id = user.whatsapp.phone_number_id;
@@ -349,11 +271,8 @@ if (!user || !user.wa_accessToken) {
       }
     );
 
-    console.log("✅ WhatsApp hello_world message sent!", response.data);
     res.json({ success: true, message: "hello_world sent!", data: response.data });
-
   } catch (error) {
-    console.error("❌ WhatsApp API Error:", error.response?.data || error.message);
     res.status(500).json({
       error: "Failed to send WhatsApp message.",
       details: error.response?.data || error.message
@@ -361,10 +280,6 @@ if (!user || !user.wa_accessToken) {
   }
 });
 
-
-// Your routes...
-
-// ✅ Start the Server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
