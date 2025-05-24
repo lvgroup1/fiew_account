@@ -237,6 +237,17 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     console.error("❌ Token exchange failed:", error.response?.data || error.message);
     res.status(500).send("❌ Failed to retrieve access token from Meta.");
   }
+  try {
+  const debugRes = await axios.get('https://graph.facebook.com/debug_token', {
+    params: {
+      input_token: access_token,
+      access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+    }
+  });
+  console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+} catch (err) {
+  console.error("❌ Failed to debug token:", err.response?.data || err.message);
+}
 });
 
 app.post("/send-whatsapp", async (req, res) => {
