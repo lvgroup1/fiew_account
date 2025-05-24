@@ -280,18 +280,6 @@ app.post("/send-whatsapp", async (req, res) => {
   }
 });
 
-const debugRes = await axios.get(
-  'https://graph.facebook.com/debug_token',
-  {
-    params: {
-      input_token: access_token,
-      access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
-    }
-  }
-);
-console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
-
-
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
