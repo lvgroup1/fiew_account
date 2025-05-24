@@ -948,16 +948,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ✅ Launch FB Login with WhatsApp Embedded Signup
   function launchWhatsAppSignup() {
-    FB.login(fbLoginCallback, {
-      config_id: '1568758047136674', // ⛳ Replace with your actual config ID from Facebook Login Configurations
-      response_type: 'code',
-      override_default_response_type: true,
-      extras: {
-        setup: {},
-        featureType: '',
-        sessionInfoVersion: '2',
-      }
-    });
+FB.login(fbLoginCallback, {
+  config_id: '1568758047136674', // ⛳ Replace with your actual config ID from Facebook Login Configurations
+  response_type: 'code',
+  override_default_response_type: true,
+  extras: {
+    setup: {},
+    featureType: '',
+    sessionInfoVersion: '2',
+  },
+  scope: 'whatsapp_business_messaging,whatsapp_business_management,business_management'
+});
   }
 
 </script>
