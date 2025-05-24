@@ -413,6 +413,25 @@ function showPage(event, pageId) {
   else console.error("Page not found:", pageId);
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", function (e) {
+      const page = this.dataset.page;
+      showPage(e, page);
+    });
+  });
+
+  const accountIcon = document.querySelector(".nav-account");
+  if (accountIcon) {
+    accountIcon.addEventListener("click", function (e) {
+      const page = this.dataset.page;
+      showPage(e, page);
+    });
+  }
+
+  showPage(null, "home");
+});
+
 let db;
 let editMode = false;
 const request = indexedDB.open("crmDatabase", 1);
