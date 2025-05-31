@@ -404,7 +404,7 @@
 
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>  
 <script>
-// ✅ Page navigation
+// ✅ Navigation logic for top links
 function showPage(event, pageId) {
   if (event) event.preventDefault();
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
@@ -527,7 +527,6 @@ async function loadClients() {
 function addClientToTable(client) {
   const table = document.querySelector("#crm table tbody");
   if (!table) return;
-
   const newRow = table.insertRow();
   newRow.innerHTML = `
     <td>${client.firstName} ${client.lastName}</td>
@@ -646,7 +645,7 @@ async function debugAccessToken() {
   if (!token) return;
   try {
     const appId = "1387100758943618";
-    const appSecret = "YOUR_APP_SECRET"; // Replace with actual app secret securely
+    const appSecret = "YOUR_APP_SECRET"; // replace securely
     const res = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${appId}|${appSecret}`);
     const data = await res.json();
     console.log("🔍 Granted scopes:", data.data?.scopes || data);
