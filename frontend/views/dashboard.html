@@ -576,7 +576,7 @@ async function debugAccessToken() {
   if (!token) return;
   try {
     const appId = "1387100758943618";
-    const appSecret = "YOUR_APP_SECRET"; // Replace with real secret
+    const appSecret = "bc5bd142bdd5f7f3185972456b3b340a"; // Replace with real secret
     const res = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${appId}|${appSecret}`);
     const data = await res.json();
     console.log("🔍 Token scopes:", data.data?.scopes);
