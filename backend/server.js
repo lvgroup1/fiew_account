@@ -180,43 +180,77 @@ app.get("/config", (req, res) => {
 });
 
 app.get("/api/whatsapp/callback", async (req, res) => {
-  try {
-    const { code, state } = req.query;
-    if (!code) return res.status(400).send("❌ Missing authorization code.");
+  const { code, state } = req.query;
 
+  if (!code) {
+    return res.status(400).send("❌ Missing authorization code.");
+  }
+
+  let access_token;
+  try {
+    // 1. Exchange code for access token
     const tokenResponse = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
       params: {
         client_id: process.env.META_APP_ID,
         client_secret: process.env.META_APP_SECRET,
         redirect_uri: "https://fiew-account.onrender.com/api/whatsapp/callback",
-        code: code,
-      },
+        code
+      }
     });
+    access_token = tokenResponse.data.access_token;
+    if (!access_token) throw new Error("Access token not found in response.");
+  } catch (error) {
+    console.error("❌ Token exchange failed:", error.response?.data || error.message);
+    return res.status(500).send("❌ Failed to retrieve access token from Meta.");
+  }
 
-    const access_token = tokenResponse.data.access_token;
+  try {
+    // 2. Debug access token (optional but helpful for dev)
+    const debugRes = await axios.get("https://graph.facebook.com/debug_token", {
+      params: {
+        input_token: access_token,
+        access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
+      }
+    });
+    console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
+  } catch (err) {
+    console.error("❌ Failed to debug token:", err.response?.data || err.message);
+  }
+
+  try {
+    // 3. Get user ID
     const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
       headers: { Authorization: `Bearer ${access_token}` },
       params: { fields: "id" }
     });
     const userId = meRes.data.id;
 
+    // 4. Get business ID
     const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const businessId = bizRes.data.data[0]?.id;
+    if (!businessId) throw new Error("No business ID found.");
 
+    // 5. Get WABA ID
     const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const wabaId = wabaRes.data.data[0]?.id;
+    if (!wabaId) throw new Error("No WhatsApp Business Account found.");
 
+    // 6. Get phone number ID and display name
     const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
-    const phone_number_id = phoneRes.data.data[0]?.id;
-    const display_name = phoneRes.data.data[0]?.display_name;
+    const phoneData = phoneRes.data.data[0];
+    if (!phoneData) throw new Error("No phone number found.");
 
-    const userEmail = decodeURIComponent(state) || "test@example.com";
+    const phone_number_id = phoneData.id;
+    const display_name = phoneData.display_name;
+
+    // 7. Save credentials to database
+    const userEmail = decodeURIComponent(state || "test@example.com");
 
     await User.findOneAndUpdate(
       { email: userEmail },
@@ -234,20 +268,9 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
   } catch (error) {
-    console.error("❌ Token exchange failed:", error.response?.data || error.message);
-    res.status(500).send("❌ Failed to retrieve access token from Meta.");
+    console.error("❌ Failed to complete WhatsApp integration:", error.response?.data || error.message);
+    res.status(500).send("❌ Failed to retrieve WhatsApp Business details.");
   }
-  try {
-  const debugRes = await axios.get('https://graph.facebook.com/debug_token', {
-    params: {
-      input_token: access_token,
-      access_token: `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`
-    }
-  });
-  console.log("🔍 Granted scopes:", debugRes.data.data.scopes);
-} catch (err) {
-  console.error("❌ Failed to debug token:", err.response?.data || err.message);
-}
 });
 
 app.post("/send-whatsapp", async (req, res) => {
