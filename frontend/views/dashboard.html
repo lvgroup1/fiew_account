@@ -611,7 +611,7 @@ async function connectWhatsApp() {
     if (!response.ok) throw new Error("Failed to fetch config");
     const config = await response.json();
     const clientId = config.META_APP_ID;
-    const scope = "whatsapp_business_messaging whatsapp_business_management business_management";
+    const scope = "whatsapp_business_messaging,whatsapp_business_management,business_management";
     const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${encodeURIComponent(userEmail)}`;
     window.location.href = authUrl;
   } catch (error) {
