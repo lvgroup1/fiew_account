@@ -586,8 +586,13 @@ async function debugAccessToken() {
 }
 
 function launchWhatsAppSignup() {
-  if (!window.FB) return alert("Facebook SDK not loaded");
+  const configId = "1568758047136674"; // Config ID
   const email = localStorage.getItem("userEmail") || "demo@example.com";
+
+  if (!window.FB) {
+    alert("Facebook SDK not loaded");
+    return;
+  }
 
   window.FB.init({
     appId: "1387100758943618",
@@ -596,19 +601,25 @@ function launchWhatsAppSignup() {
     version: "v18.0"
   });
 
-  window.FB.ui({
-    display: "popup",
-    method: "whatsapp_business_account_create",
-    app_id: "1387100758943618",
-    state: email
-  }, function (response) {
-    document.getElementById("sdk-response").textContent = JSON.stringify(response, null, 2);
-    if (response && response.id) {
-      alert("🟢 Embedded Signup started!");
+  window.FB.login(function (response) {
+    if (response.authResponse) {
+      console.log("✅ Auth success:", response);
+      window.FB.ui({
+        method: 'wa_embedded_signup',
+        config_id: configId,
+        state: email
+      }, function (res) {
+        document.getElementById("sdk-response").textContent = JSON.stringify(res, null, 2);
+        if (res && res.id) {
+          alert("🟢 Embedded Signup initiated!");
+        } else {
+          alert("❌ Signup failed.");
+        }
+      });
     } else {
-      alert("❌ Failed to start embedded signup.");
+      console.warn("❌ User cancelled login or not authorized");
     }
-  });
+  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
 }
 </script>
 </body>
