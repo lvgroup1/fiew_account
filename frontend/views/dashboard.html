@@ -404,131 +404,77 @@
 
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>  
 <script>
-// ✅ Navigation logic for top links
-function showPage(event, pageId) {
-  if (event) event.preventDefault();
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const targetPage = document.getElementById(pageId);
-  if (targetPage) targetPage.style.display = 'flex';
-  else console.error("Page not found:", pageId);
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".nav-links a").forEach(link => {
-    link.addEventListener("click", function (e) {
-      const page = this.dataset.page;
-      showPage(e, page);
+  const pageLinks = document.querySelectorAll(".nav-links a");
+  const accountIcon = document.querySelector(".nav-account");
+  const pages = document.querySelectorAll(".page");
+
+  // Handle menu navigation
+  function showPage(pageId) {
+    pages.forEach(page => page.style.display = "none");
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.style.display = "flex";
+  }
+
+  pageLinks.forEach(link => {
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      const page = link.getAttribute("data-page");
+      showPage(page);
     });
   });
 
-  const accountIcon = document.querySelector(".nav-account");
   if (accountIcon) {
-    accountIcon.addEventListener("click", function (e) {
-      const page = this.dataset.page;
-      showPage(e, page);
+    accountIcon.addEventListener("click", e => {
+      const page = accountIcon.getAttribute("data-page");
+      showPage(page);
     });
   }
 
-  showPage(null, "home");
+  showPage("home"); // Default view
+  initIndexedDB();
+  restoreWhatsAppCredentials();
 });
 
-let db;
-let editMode = false;
-const request = indexedDB.open("crmDatabase", 1);
-
-request.onupgradeneeded = function (event) {
-  db = event.target.result;
-  const store = db.createObjectStore("clients", { keyPath: "id", autoIncrement: true });
-  store.createIndex("name", "firstName", { unique: false });
-};
-
-request.onsuccess = function (event) {
-  db = event.target.result;
-  console.log("IndexedDB connected successfully.");
-  loadClients();
-};
-
-request.onerror = function (event) {
-  console.error("IndexedDB error:", event.target.errorCode);
-};
-
-function logout() {
-  alert("Logging out...");
-  window.location.href = "https://lvgroup1.github.io/fiew_account/frontend/views/login.html";
+// ======================= IndexedDB ===========================
+let db, editMode = false;
+function initIndexedDB() {
+  const request = indexedDB.open("crmDatabase", 1);
+  request.onupgradeneeded = function (event) {
+    db = event.target.result;
+    const store = db.createObjectStore("clients", { keyPath: "id", autoIncrement: true });
+    store.createIndex("name", "firstName", { unique: false });
+  };
+  request.onsuccess = function (event) {
+    db = event.target.result;
+    console.log("✅ IndexedDB connected");
+    loadClients();
+  };
+  request.onerror = function (event) {
+    console.error("❌ IndexedDB error:", event.target.errorCode);
+  };
 }
 
-function openAddClientModal() {
-  document.getElementById('addClientModal').style.display = 'block';
-}
-
-function closeAddClientModal() {
-  document.getElementById('addClientModal').style.display = 'none';
-}
-
-function toggleEditMode() {
-  editMode = !editMode;
-  document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.style.display = editMode ? "inline-block" : "none";
-  });
-}
-
-function formatPhoneNumber(phone) {
-  phone = phone.trim();
-  if (!phone.startsWith("+")) {
-    phone = "+371" + phone;
-  }
-  return phone.replace(/\D/g, "");
-}
-
-async function saveClient() {
-  const firstName = document.getElementById('firstName').value.trim();
-  const lastName = document.getElementById('lastName').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const status = document.getElementById('status').value;
-  const ownerEmail = localStorage.getItem("userEmail");
-
-  if (firstName && lastName && email && phone && ownerEmail) {
-    const client = { firstName, lastName, email, phone, status, ownerEmail };
-    try {
-      const response = await fetch("https://fiew-account.onrender.com/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(client)
-      });
-      if (!response.ok) throw new Error("Failed to save client to backend.");
-      const savedClient = await response.json();
-      addClientToTable(savedClient.client);
-      closeAddClientModal();
-    } catch (err) {
-      console.error("❌ Error saving client:", err.message);
-      alert("Failed to save client. Try again.");
-    }
-  } else {
-    alert("Please fill in all fields.");
-  }
-}
-
+// ====================== CRM ===========================
 async function loadClients() {
+  const userEmail = localStorage.getItem("userEmail");
+  if (!userEmail) return;
   try {
-    const userEmail = localStorage.getItem("userEmail");
-    if (!userEmail) return;
-    const response = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
-    if (!response.ok) throw new Error("Failed to fetch clients");
-    const clients = await response.json();
-    const table = document.querySelector("#crm table tbody");
-    table.innerHTML = "";
-    clients.forEach(client => addClientToTable(client));
-  } catch (error) {
-    console.error("❌ Error loading clients:", error);
+    const res = await fetch(`https://fiew-account.onrender.com/api/clients?email=${encodeURIComponent(userEmail)}`);
+    if (!res.ok) throw new Error("Failed to fetch clients");
+    const clients = await res.json();
+    const tbody = document.querySelector("#crm table tbody");
+    tbody.innerHTML = "";
+    clients.forEach(addClientToTable);
+  } catch (err) {
+    console.error("❌ Error loading clients:", err);
   }
 }
 
 function addClientToTable(client) {
-  const table = document.querySelector("#crm table tbody");
-  if (!table) return;
-  const newRow = table.insertRow();
-  newRow.innerHTML = `
+  const tbody = document.querySelector("#crm table tbody");
+  const row = tbody.insertRow();
+  row.innerHTML = `
     <td>${client.firstName} ${client.lastName}</td>
     <td><select class="status-select">
       <option value="New">New</option>
@@ -538,120 +484,131 @@ function addClientToTable(client) {
     </select></td>
     <td>${client.email}</td>
     <td>${client.phone.startsWith("+") ? client.phone : "+" + client.phone}</td>
-    <td><button class="delete-btn" onclick="deleteClient('${client._id}')" style="display:none;">🗑️</button></td>
+    <td><button class="delete-btn" style="display: none;" onclick="deleteClient('${client._id}')">🗑️</button></td>
   `;
-  newRow.querySelector(".status-select").value = client.status;
-  newRow.querySelector(".status-select").addEventListener("change", function () {
-    updateStatus(this.value, client);
-  });
+  row.querySelector(".status-select").value = client.status;
+  row.querySelector(".status-select").addEventListener("change", () => updateStatus(client._id, row.querySelector(".status-select").value, client));
 }
 
-function updateStatus(selectedStatus, client) {
-  if (!client || !client._id) return;
-  fetch(`https://fiew-account.onrender.com/api/clients/${client._id}`, {
+function updateStatus(id, status, client) {
+  fetch(`https://fiew-account.onrender.com/api/clients/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: selectedStatus })
+    body: JSON.stringify({ status })
   })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to update status on server");
-      if (selectedStatus === "Completed") {
-        const message = localStorage.getItem("whatsappMessage") || `Hello ${client.firstName}, your request has been completed! 🎉`;
-        sendWhatsAppMessage(client.phone, message);
+    .then(res => {
+      if (!res.ok) throw new Error("Status update failed");
+      if (status === "Completed") {
+        const msg = (localStorage.getItem("whatsappMessage") || `Hello ${client.firstName}, your request has been completed! 🎉`);
+        sendWhatsAppMessage(client.phone, msg);
       }
     })
-    .catch((err) => console.error("❌ Update failed:", err));
+    .catch(err => console.error("❌ Status update error:", err));
 }
 
-async function deleteClient(clientId) {
-  if (!clientId) return;
+async function deleteClient(id) {
+  if (!id) return;
   try {
-    const response = await fetch(`https://fiew-account.onrender.com/api/clients/${clientId}`, { method: "DELETE" });
-    if (!response.ok) throw new Error("Delete failed");
-    reloadTable();
+    const res = await fetch(`https://fiew-account.onrender.com/api/clients/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Delete failed");
+    loadClients();
   } catch (err) {
     console.error("❌ Delete error:", err);
   }
 }
 
-function reloadTable() {
-  const table = document.querySelector("#crm table tbody");
-  if (table) table.innerHTML = "";
-  loadClients();
+// =================== WhatsApp Integration ====================
+async function connectWhatsApp() {
+  try {
+    const email = localStorage.getItem("userEmail") || "demo@example.com";
+    const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
+    const res = await fetch("https://fiew-account.onrender.com/config");
+    const config = await res.json();
+    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${config.META_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=whatsapp_business_messaging,whatsapp_business_management,business_management&response_type=code&state=${encodeURIComponent(email)}`;
+    window.location.href = authUrl;
+  } catch (err) {
+    console.error("❌ WhatsApp connection failed:", err);
+    alert("Failed to connect WhatsApp");
+  }
 }
 
 function saveMessageTemplate() {
   const message = document.getElementById("whatsapp-message").value;
   localStorage.setItem("whatsappMessage", message);
-  alert("Template saved!");
+  alert("Message saved!");
 }
 
 async function sendWhatsAppMessage(phone, message) {
   try {
     const email = localStorage.getItem("userEmail");
-    const response = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
+    const res = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, message, email })
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Unknown error");
-    console.log("✅ WhatsApp message sent:", data);
-  } catch (error) {
-    console.error("❌ WhatsApp error:", error);
-    alert("WhatsApp send failed.");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unknown error");
+    console.log("✅ Message sent:", data);
+  } catch (err) {
+    console.error("❌ WhatsApp send failed:", err);
+    alert("Failed to send WhatsApp message");
   }
 }
 
-async function connectWhatsApp() {
-  try {
-    const userEmail = localStorage.getItem("userEmail") || "demo@example.com";
-    const redirectUri = "https://fiew-account.onrender.com/api/whatsapp/callback";
-    const response = await fetch("https://fiew-account.onrender.com/config");
-    if (!response.ok) throw new Error("Failed to fetch config");
-    const config = await response.json();
-    const clientId = config.META_APP_ID;
-    const scope = "whatsapp_business_messaging,whatsapp_business_management,business_management";
-    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${encodeURIComponent(userEmail)}`;
-    window.location.href = authUrl;
-  } catch (error) {
-    console.error("❌ connectWhatsApp error:", error);
-    alert("WhatsApp connection failed.");
-  }
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
+async function restoreWhatsAppCredentials() {
   const email = localStorage.getItem("userEmail");
   if (!email) return;
   try {
     const res = await fetch(`https://fiew-account.onrender.com/api/whatsapp-credentials?email=${encodeURIComponent(email)}`);
-    if (res.ok) {
-      const { accessToken, phoneNumberId, wabaId } = await res.json();
-      localStorage.setItem("whatsapp_access_token", accessToken);
-      localStorage.setItem("phone_number_id", phoneNumberId);
-      localStorage.setItem("waba_id", wabaId);
-      console.log("✅ WhatsApp credentials restored.");
-    } else {
-      console.warn("⚠️ WhatsApp credentials not found for", email);
-    }
+    if (!res.ok) throw new Error("Not found");
+    const { accessToken, phoneNumberId, wabaId } = await res.json();
+    localStorage.setItem("whatsapp_access_token", accessToken);
+    localStorage.setItem("phone_number_id", phoneNumberId);
+    localStorage.setItem("waba_id", wabaId);
+    console.log("✅ WhatsApp credentials restored");
   } catch (err) {
-    console.error("❌ Restore error:", err);
+    console.warn("⚠️ No WhatsApp credentials found:", err);
   }
-  debugAccessToken();
-});
+}
 
 async function debugAccessToken() {
   const token = localStorage.getItem("whatsapp_access_token");
   if (!token) return;
   try {
     const appId = "1387100758943618";
-    const appSecret = "YOUR_APP_SECRET"; // replace securely
+    const appSecret = "YOUR_APP_SECRET"; // Replace with real secret
     const res = await fetch(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${appId}|${appSecret}`);
     const data = await res.json();
-    console.log("🔍 Granted scopes:", data.data?.scopes || data);
+    console.log("🔍 Token scopes:", data.data?.scopes);
   } catch (err) {
-    console.error("❌ Debug token failed:", err);
+    console.error("❌ Token debug failed:", err);
   }
+}
+
+function launchWhatsAppSignup() {
+  if (!window.FB) return alert("Facebook SDK not loaded");
+  const email = localStorage.getItem("userEmail") || "demo@example.com";
+
+  window.FB.init({
+    appId: "1387100758943618",
+    autoLogAppEvents: true,
+    xfbml: true,
+    version: "v18.0"
+  });
+
+  window.FB.ui({
+    display: "popup",
+    method: "whatsapp_business_account_create",
+    app_id: "1387100758943618",
+    state: email
+  }, function (response) {
+    document.getElementById("sdk-response").textContent = JSON.stringify(response, null, 2);
+    if (response && response.id) {
+      alert("🟢 Embedded Signup started!");
+    } else {
+      alert("❌ Failed to start embedded signup.");
+    }
+  });
 }
 </script>
 </body>
