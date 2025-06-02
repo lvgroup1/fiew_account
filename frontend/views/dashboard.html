@@ -621,7 +621,7 @@ async function connectWhatsApp() {
 }
 
 function launchWhatsAppSignup() {
-  const configId = "1568758047136674"; // Your embedded signup config ID
+  const configId = "1568758047136674";
   const email = localStorage.getItem("userEmail") || "demo@example.com";
 
   if (!window.FB) {
@@ -636,15 +636,20 @@ function launchWhatsAppSignup() {
     version: "v18.0"
   });
 
+  // Optional login if needed
   window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
+
+      // Open the actual signup page
       const signupUrl = `https://www.facebook.com/business/wa/embedded/signup?config_id=${configId}&state=${encodeURIComponent(email)}`;
-      window.open(signupUrl, '_blank', 'width=600,height=700');
+      window.location.href = signupUrl;
     } else {
       console.warn("❌ User cancelled login or not authorized");
     }
-  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
+  }, {
+    scope: "whatsapp_business_management,business_management,whatsapp_business_messaging"
+  });
 }
 
 async function restoreWhatsAppCredentials() {
