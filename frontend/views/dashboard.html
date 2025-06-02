@@ -541,17 +541,17 @@ function saveMessageTemplate() {
 async function sendWhatsAppMessage(phone, message) {
   try {
     const email = localStorage.getItem("userEmail");
-    const res = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
+    const response = await fetch("https://fiew-account.onrender.com/send-whatsapp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone, message, email })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Unknown error");
-    console.log("✅ Message sent:", data);
-  } catch (err) {
-    console.error("❌ WhatsApp send failed:", err);
-    alert("Failed to send WhatsApp message");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Unknown error");
+    console.log("✅ WhatsApp message sent:", data);
+  } catch (error) {
+    console.error("❌ WhatsApp error:", error);
+    alert("WhatsApp send failed.");
   }
 }
 
@@ -586,7 +586,7 @@ async function debugAccessToken() {
 }
 
 function launchWhatsAppSignup() {
-  const configId = "1568758047136674"; // Config ID
+  const configId = "1568758047136674"; // Replace with your own Config ID from Meta
   const email = localStorage.getItem("userEmail") || "demo@example.com";
 
   if (!window.FB) {
@@ -595,20 +595,24 @@ function launchWhatsAppSignup() {
   }
 
   window.FB.init({
-    appId: "1387100758943618",
+    appId: "1387100758943618", // Your App ID
     autoLogAppEvents: true,
     xfbml: true,
     version: "v18.0"
   });
 
+  // Login first to get correct permissions
   window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
+
+      // Then launch embedded signup flow
       window.FB.ui({
-        method: 'wa_embedded_signup',
+        method: "wa_embedded_signup",
         config_id: configId,
         state: email
       }, function (res) {
+        console.log("📦 Embedded signup response:", res);
         document.getElementById("sdk-response").textContent = JSON.stringify(res, null, 2);
         if (res && res.id) {
           alert("🟢 Embedded Signup initiated!");
@@ -616,10 +620,13 @@ function launchWhatsAppSignup() {
           alert("❌ Signup failed.");
         }
       });
+
     } else {
-      console.warn("❌ User cancelled login or not authorized");
+      console.warn("❌ Login cancelled or failed");
     }
-  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
+  }, {
+    scope: "whatsapp_business_management,business_management,whatsapp_business_messaging"
+  });
 }
 </script>
 </body>
