@@ -269,14 +269,14 @@ app.post("/send-whatsapp", async (req, res) => {
     const response = await axios.post(
       `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
       {
-        messaging_product: "whatsapp",
-        to: phone,
-        type: "template",
-        template: {
-          name: "hello_world",
-          language: { code: "en_US" }
-        }
-      },
+  messaging_product: "whatsapp",
+  to: phone,
+  type: "text",
+  text: {
+    body: message || "Hello from FIEW CRM!"
+  }
+}
+,
       {
         headers: {
           Authorization: `Bearer ${token}`,
