@@ -621,7 +621,7 @@ async function connectWhatsApp() {
 }
 
 function launchWhatsAppSignup() {
-  const configId = "1568758047136674"; // Your config ID
+  const configId = "1568758047136674"; // ✅ your correct config ID
   const email = localStorage.getItem("userEmail") || "demo@example.com";
 
   if (!window.FB) {
@@ -629,26 +629,26 @@ function launchWhatsAppSignup() {
     return;
   }
 
-  // Initialize FB SDK
+  // Initialize Facebook SDK
   window.FB.init({
-    appId: "1387100758943618",
+    appId: "1387100758943618", // ✅ your app ID
     autoLogAppEvents: true,
     xfbml: true,
     version: "v18.0"
   });
 
-  // First: Facebook login with proper scopes
+  // Prompt login with proper permissions
   window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
 
-      // Then: Launch embedded signup in a popup
+      // Launch the embedded signup
       window.FB.ui({
         method: 'wa_embedded_signup',
         config_id: configId,
         state: email
       }, function (res) {
-        console.log("🟢 Embedded signup response:", res);
+        console.log("🟢 Embedded Signup Response:", res);
         document.getElementById("sdk-response").textContent = JSON.stringify(res, null, 2);
       });
 
