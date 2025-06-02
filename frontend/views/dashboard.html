@@ -636,20 +636,23 @@ function launchWhatsAppSignup() {
     version: "v18.0"
   });
 
-  // Optional login if needed
   window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
 
-      // Open the actual signup page
-      const signupUrl = `https://www.facebook.com/business/wa/embedded/signup?config_id=${configId}&state=${encodeURIComponent(email)}`;
-      window.location.href = signupUrl;
+      // 🟢 Use SDK to launch embedded signup popup
+      window.FB.ui({
+        method: 'wa_embedded_signup',
+        config_id: configId,
+        state: email
+      }, function (res) {
+        console.log("Signup response:", res);
+        document.getElementById("sdk-response").textContent = JSON.stringify(res, null, 2);
+      });
     } else {
       console.warn("❌ User cancelled login or not authorized");
     }
-  }, {
-    scope: "whatsapp_business_management,business_management,whatsapp_business_messaging"
-  });
+  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
 }
 
 async function restoreWhatsAppCredentials() {
