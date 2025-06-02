@@ -255,11 +255,11 @@ app.get("/api/whatsapp/callback", async (req, res) => {
 });
 app.post("/send-whatsapp", async (req, res) => {
   try {
-    const { phone, email } = req.body;
+    const { phone, email, message } = req.body;
     if (!phone || !email) return res.status(400).json({ error: "Missing phone number or email." });
 
     const user = await User.findOne({ email });
-    if (!user || !user.whatsapp || !user.whatsapp.access_token) {
+    if (!user || !user.whatsapp || !user.whatsapp.access_token || !user.whatsapp.phone_number_id) {
       return res.status(403).json({ error: "WhatsApp not connected for this user." });
     }
 
@@ -267,16 +267,15 @@ app.post("/send-whatsapp", async (req, res) => {
     const phone_number_id = user.whatsapp.phone_number_id;
 
     const response = await axios.post(
-      `https://graph.facebook.com/v16.0/${phone_number_id}/messages`,
+      `https://graph.facebook.com/v18.0/${phone_number_id}/messages`,
       {
-  messaging_product: "whatsapp",
-  to: phone,
-  type: "text",
-  text: {
-    body: message || "Hello from FIEW CRM!"
-  }
-}
-,
+        messaging_product: "whatsapp",
+        to: phone,
+        type: "text",
+        text: {
+          body: message || "Hello from FIEW CRM!"
+        }
+      },
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -285,8 +284,9 @@ app.post("/send-whatsapp", async (req, res) => {
       }
     );
 
-    res.json({ success: true, message: "hello_world sent!", data: response.data });
+    res.json({ success: true, message: "Message sent!", data: response.data });
   } catch (error) {
+    console.error("❌ WhatsApp send error:", error.response?.data || error.message);
     res.status(500).json({
       error: "Failed to send WhatsApp message.",
       details: error.response?.data || error.message
