@@ -184,6 +184,7 @@ app.get("/api/whatsapp/callback", async (req, res) => {
     const { code, state } = req.query;
     if (!code) return res.status(400).send("❌ Missing authorization code.");
 
+    // Exchange code for token
     const tokenRes = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
       params: {
         client_id: process.env.META_APP_ID,
@@ -192,41 +193,43 @@ app.get("/api/whatsapp/callback", async (req, res) => {
         code,
       }
     });
-
     const access_token = tokenRes.data.access_token;
+    console.log("✅ Access token retrieved");
 
-    // Step 1: Get user ID
+    // Get user ID
     const meRes = await axios.get("https://graph.facebook.com/v18.0/me", {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const userId = meRes.data.id;
+    console.log("✅ User ID:", userId);
 
-    // Step 2: Get businesses
+    // Get businesses
     const bizRes = await axios.get(`https://graph.facebook.com/v18.0/${userId}/businesses`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const businessId = bizRes.data.data?.[0]?.id;
-    if (!businessId) throw new Error("❌ No business found");
+    console.log("✅ Business ID:", businessId);
+    if (!businessId) throw new Error("❌ No business found for user.");
 
-    // Step 3: Get WABA ID
+    // Get WABA ID
     const wabaRes = await axios.get(`https://graph.facebook.com/v18.0/${businessId}/owned_whatsapp_business_accounts`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
     const wabaId = wabaRes.data.data?.[0]?.id;
+    console.log("✅ WABA ID:", wabaId);
     if (!wabaId) throw new Error("❌ No WhatsApp Business Account found");
 
-    // Step 4: Get phone number ID
+    // Get phone number
     const phoneRes = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/phone_numbers`, {
       headers: { Authorization: `Bearer ${access_token}` }
     });
-
     const phoneData = phoneRes.data.data?.[0];
-    if (!phoneData) throw new Error("❌ No phone number connected to WABA");
+    console.log("✅ Phone data:", phoneData);
+    if (!phoneData) throw new Error("❌ No phone number found in WABA");
 
     const phone_number_id = phoneData.id;
     const display_name = phoneData.display_name;
 
-    // Final step: Save
     const userEmail = decodeURIComponent(state || "test@example.com");
 
     await User.findOneAndUpdate(
@@ -243,13 +246,13 @@ app.get("/api/whatsapp/callback", async (req, res) => {
       { new: true, upsert: true }
     );
 
+    console.log("✅ WhatsApp Business details saved for user:", userEmail);
     res.send("✅ WhatsApp Business account connected successfully! You can close this window.");
   } catch (error) {
     console.error("❌ Failed to complete WhatsApp integration:", error.response?.data || error.message);
     res.status(500).send("❌ Failed to retrieve WhatsApp Business details.");
   }
 });
-
 app.post("/send-whatsapp", async (req, res) => {
   try {
     const { phone, email } = req.body;
