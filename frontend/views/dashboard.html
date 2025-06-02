@@ -621,7 +621,7 @@ async function connectWhatsApp() {
 }
 
 function launchWhatsAppSignup() {
-  const configId = "1568758047136674";
+  const configId = "1568758047136674"; // Your config ID
   const email = localStorage.getItem("userEmail") || "demo@example.com";
 
   if (!window.FB) {
@@ -629,6 +629,7 @@ function launchWhatsAppSignup() {
     return;
   }
 
+  // Initialize FB SDK
   window.FB.init({
     appId: "1387100758943618",
     autoLogAppEvents: true,
@@ -636,23 +637,27 @@ function launchWhatsAppSignup() {
     version: "v18.0"
   });
 
+  // First: Facebook login with proper scopes
   window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
 
-      // 🟢 Use SDK to launch embedded signup popup
+      // Then: Launch embedded signup in a popup
       window.FB.ui({
         method: 'wa_embedded_signup',
         config_id: configId,
         state: email
       }, function (res) {
-        console.log("Signup response:", res);
+        console.log("🟢 Embedded signup response:", res);
         document.getElementById("sdk-response").textContent = JSON.stringify(res, null, 2);
       });
+
     } else {
       console.warn("❌ User cancelled login or not authorized");
     }
-  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
+  }, {
+    scope: "whatsapp_business_management,whatsapp_business_messaging,business_management"
+  });
 }
 
 async function restoreWhatsAppCredentials() {
