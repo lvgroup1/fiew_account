@@ -618,7 +618,7 @@ async function connectWhatsApp() {
 }
 
 function launchWhatsAppSignup() {
-  const configId = "1568758047136674"; // Your config ID
+  const configId = "1568758047136674";
   const email = localStorage.getItem("userEmail") || "demo@example.com";
 
   if (!window.FB) {
@@ -626,24 +626,33 @@ function launchWhatsAppSignup() {
     return;
   }
 
-  FB.init({
+  window.FB.init({
     appId: "1387100758943618",
     autoLogAppEvents: true,
     xfbml: true,
     version: "v18.0"
   });
 
-  FB.login(function (response) {
+  window.FB.login(function (response) {
     if (response.authResponse) {
       console.log("✅ Auth success:", response);
-      const signupUrl = `https://www.facebook.com/business/wa/embedded/signup?config_id=${configId}&state=${encodeURIComponent(email)}`;
-
-      // Open in a new tab instead of in-frame to avoid X-Frame-Options error
-      window.open(signupUrl, '_blank', 'width=800,height=700');
+      window.FB.ui({
+        method: 'wa_embedded_signup',
+        config_id: configId,
+        state: email
+      }, function (res) {
+        if (res && res.id) {
+          alert("🟢 Signup completed!");
+        } else {
+          alert("❌ Signup failed.");
+        }
+      });
     } else {
       console.warn("❌ User cancelled login or not authorized");
     }
-  }, { scope: "whatsapp_business_management,business_management,whatsapp_business_messaging" });
+  }, {
+    scope: "whatsapp_business_management,business_management,whatsapp_business_messaging"
+  });
 }
 
 async function restoreWhatsAppCredentials() {
