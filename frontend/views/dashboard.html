@@ -626,12 +626,15 @@ function launchWhatsAppSignup() {
     return;
   }
 
-  window.FB.init({
-    appId: "1387100758943618",
-    autoLogAppEvents: true,
-    xfbml: true,
-    version: "v18.0"
-  });
+  if (!window.fbInitialized) {
+    window.FB.init({
+      appId: "1387100758943618",
+      autoLogAppEvents: true,
+      xfbml: true,
+      version: "v18.0"
+    });
+    window.fbInitialized = true;
+  }
 
   window.FB.login(function (response) {
     if (response.authResponse) {
@@ -644,6 +647,7 @@ function launchWhatsAppSignup() {
         if (res && res.id) {
           alert("🟢 Signup completed!");
         } else {
+          console.error("❌ FB.ui signup error or cancelled:", res);
           alert("❌ Signup failed.");
         }
       });
